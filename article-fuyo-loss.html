@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>扶養に入ったまま働くといくら損するか計算してみた | kurashicalc</title>
+<meta name="description" content="扶養内に収入を抑えることで本当に損をしているのか？106万・130万の壁を境に手取りがどう変わるか、具体的な金額で徹底検証します。">
+<link rel="stylesheet" href="style.css">
+<style>
+/* 記事固有：シミュレーション表 */
+.sim-table-wrap { overflow-x: auto; margin: 28px 0; }
+.sim-table { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 500px; }
+.sim-table th {
+  background: var(--bg2); padding: 11px 14px;
+  text-align: center; font-size: 12px; font-weight: 700;
+  border-bottom: 2px solid var(--border2);
+  font-family: 'DM Mono', monospace; letter-spacing: 0.04em;
+}
+.sim-table th:first-child { text-align: left; }
+.sim-table td {
+  padding: 11px 14px; border-bottom: 1px solid var(--border);
+  text-align: center; color: var(--text2); font-family: 'DM Mono', monospace; font-size: 13px;
+}
+.sim-table td:first-child { text-align: left; font-family: 'Noto Serif JP', serif; font-size: 14px; color: var(--text); font-weight: 600; }
+.sim-table tr:last-child td { border-bottom: none; }
+.sim-table tr:hover td { background: var(--bg2); }
+.sim-table .loss { color: var(--red); font-weight: 700; }
+.sim-table .gain { color: var(--green); font-weight: 700; }
+.sim-table .warn-row td { background: var(--red-bg); }
+.sim-table .warn-row:hover td { background: #fce8e6; }
+.sim-table .good-row td { background: var(--green-bg); }
+.sim-table .good-row:hover td { background: #dff2e8; }
+
+/* チャート風バー */
+.bar-chart { margin: 28px 0; }
+.bar-row { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+.bar-label { width: 90px; font-size: 12px; color: var(--text2); font-family: 'DM Mono', monospace; flex-shrink: 0; text-align: right; }
+.bar-track { flex: 1; height: 28px; background: var(--bg2); border-radius: 4px; overflow: hidden; position: relative; }
+.bar-fill { height: 100%; border-radius: 4px; display: flex; align-items: center; padding-left: 10px; font-family: 'DM Mono', monospace; font-size: 12px; font-weight: 500; transition: width 0.8s ease; white-space: nowrap; }
+.bar-fill.safe   { background: var(--green-bg); color: var(--green); border: 1px solid rgba(26,122,74,0.2); }
+.bar-fill.danger { background: var(--red-bg);   color: var(--red);   border: 1px solid rgba(192,57,43,0.2); }
+.bar-fill.warn   { background: var(--yellow-bg);color: var(--yellow);border: 1px solid rgba(160,114,10,0.2); }
+</style>
+</head>
+<body>
+
+<nav class="site-nav">
+  <a href="/" class="logo">kurashicalc</a>
+  <div class="nav-links">
+    <a href="/" class="hide-sp">ツール</a>
+    <a href="/article-103man-wall.html" class="hide-sp">記事</a>
+    <a href="/privacy.html" class="hide-sp">プライバシーポリシー</a>
+    <a href="/contact.html">お問い合わせ</a>
+  </div>
+</nav>
+
+<div class="container-narrow">
+
+  <div class="article-meta">
+    <div class="article-category">扶養・手取り計算</div>
+    <h1 class="article-title">扶養に入ったまま働くといくら損するか計算してみた</h1>
+    <div class="article-info">
+      <span>2025年2月24日</span>
+      <span>更新：2025年2月24日</span>
+      <span>読了目安：約7分</span>
+    </div>
+  </div>
+
+  <div class="callout info">
+    <div class="callout-label">この記事のポイント</div>
+    「扶養内に収めないと損」は必ずしも正しくありません。年収帯によっては<strong>働き控えの方が手取りが少ない</strong>ケースがあります。具体的な数字で確かめます。
+  </div>
+
+  <div class="toc">
+    <div class="toc-title">目次</div>
+    <ol>
+      <li><a href="#premise">前提：「損する」とはどういう意味か</a></li>
+      <li><a href="#sim106">106万円の壁前後でシミュレーション</a></li>
+      <li><a href="#sim130">130万円の壁前後でシミュレーション</a></li>
+      <li><a href="#chart">年収ごとの手取り一覧</a></li>
+      <li><a href="#when-loss">本当に「損する年収帯」はどこか</a></li>
+      <li><a href="#strategy">扶養を外れるなら年収いくら目指すべきか</a></li>
+      <li><a href="#summary">まとめ</a></li>
+    </ol>
+  </div>
+
+  <div class="article-body">
+
+    <h2 id="premise">前提：「損する」とはどういう意味か</h2>
+
+    <p>「扶養に入ったまま働くと損」という話をよく聞きますが、これは少し誤解を含んでいます。正確に言うと<strong>「年収を少し増やしたことで手取りが逆に減る年収帯がある」</strong>ということです。</p>
+
+    <p>たとえば年収105万円から115万円に増えたとき、社会保険料や税金の負担が一気に増えて、手取りが105万円のときより少なくなる場合があります。この「頑張って稼いだのに手取りが減る」という現象が「損する」の本質です。</p>
+
+    <div class="callout info">
+      <div class="callout-label">この記事での計算条件</div>
+      ・勤務先：51人以上の企業（106万円の壁が適用される）<br>
+      ・週所定労働時間：20時間以上<br>
+      ・配偶者あり（年収500万円以下）<br>
+      ・2025年税制改正後の数値を使用
+    </div>
+
+    <h2 id="sim106">106万円の壁前後でシミュレーション</h2>
+
+    <p>まず社会保険の壁（106万円）前後を見てみましょう。この壁を超えると健康保険・厚生年金への加入が必要になり、保険料として給与から<strong>約14〜15%が天引き</strong>されます。</p>
+
+    <div class="sim-table-wrap">
+      <table class="sim-table">
+        <thead>
+          <tr>
+            <th>年収</th>
+            <th>社会保険料</th>
+            <th>所得税</th>
+            <th>住民税</th>
+            <th>手取り</th>
+            <th>前行との差</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="good-row">
+            <td>100万円</td>
+            <td>0円</td>
+            <td>0円</td>
+            <td>0円</td>
+            <td class="gain">100万円</td>
+            <td>—</td>
+          </tr>
+          <tr class="good-row">
+            <td>105万円（扶養内上限）</td>
+            <td>0円</td>
+            <td>0円</td>
+            <td>約0円</td>
+            <td class="gain">105万円</td>
+            <td>+5万円</td>
+          </tr>
+          <tr class="warn-row">
+            <td>110万円</td>
+            <td>約15.6万円</td>
+            <td>0円</td>
+            <td>約0円</td>
+            <td class="loss">約94.4万円</td>
+            <td class="loss">−10.6万円</td>
+          </tr>
+          <tr class="warn-row">
+            <td>115万円</td>
+            <td>約16.3万円</td>
+            <td>0円</td>
+            <td>約0.5万円</td>
+            <td class="loss">約98.2万円</td>
+            <td>+3.8万円</td>
+          </tr>
+          <tr>
+            <td>120万円</td>
+            <td>約17万円</td>
+            <td>0円</td>
+            <td>約1万円</td>
+            <td>約102万円</td>
+            <td>+3.8万円</td>
+          </tr>
+          <tr class="good-row">
+            <td>125万円</td>
+            <td>約17.7万円</td>
+            <td>0円</td>
+            <td>約1.5万円</td>
+            <td class="gain">約105.8万円</td>
+            <td>+3.8万円</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p>表を見ると、年収105万円（手取り105万円）から110万円に増やすと、社会保険料が約15.6万円発生して手取りが<strong>約94.4万円まで落ちます。</strong>5万円稼ぎを増やしたのに、手取りは逆に10万円以上減っているのです。</p>
+
+    <p>手取りが扶養内（105万円）を超えるのは年収125万円前後になってからです。つまり<strong>106〜125万円の年収帯は「損する年収帯」</strong>と言えます。</p>
+
+    <div class="callout warn">
+      <div class="callout-label">重要</div>
+      106万円の壁は<strong>51人以上の企業に勤め、週20時間以上働いている場合のみ</strong>適用されます。50人以下の職場では130万円の壁が最初の社会保険ラインになります。
+    </div>
+
+    <h2 id="sim130">130万円の壁前後でシミュレーション</h2>
+
+    <p>50人以下の企業で働く場合、または106万円の条件に当てはまらない場合は、130万円が社会保険の最初の壁になります。</p>
+
+    <div class="sim-table-wrap">
+      <table class="sim-table">
+        <thead>
+          <tr>
+            <th>年収</th>
+            <th>社会保険料</th>
+            <th>所得税</th>
+            <th>住民税</th>
+            <th>手取り</th>
+            <th>前行との差</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="good-row">
+            <td>120万円</td>
+            <td>0円</td>
+            <td>0円</td>
+            <td>約1万円</td>
+            <td class="gain">約119万円</td>
+            <td>—</td>
+          </tr>
+          <tr class="good-row">
+            <td>129万円（扶養内上限）</td>
+            <td>0円</td>
+            <td>0円</td>
+            <td>約1.9万円</td>
+            <td class="gain">約127.1万円</td>
+            <td>+8.1万円</td>
+          </tr>
+          <tr class="warn-row">
+            <td>135万円</td>
+            <td>約19.1万円</td>
+            <td>約0.6万円</td>
+            <td>約2.4万円</td>
+            <td class="loss">約112.9万円</td>
+            <td class="loss">−14.2万円</td>
+          </tr>
+          <tr class="warn-row">
+            <td>140万円</td>
+            <td>約19.8万円</td>
+            <td>約0.9万円</td>
+            <td>約2.9万円</td>
+            <td class="loss">約116.4万円</td>
+            <td>+3.5万円</td>
+          </tr>
+          <tr class="warn-row">
+            <td>150万円</td>
+            <td>約21.2万円</td>
+            <td>約1.5万円</td>
+            <td>約3.9万円</td>
+            <td class="loss">約123.4万円</td>
+            <td>+7万円</td>
+          </tr>
+          <tr class="good-row">
+            <td>160万円</td>
+            <td>約22.6万円</td>
+            <td>約2.1万円</td>
+            <td>約4.9万円</td>
+            <td class="gain">約130.4万円</td>
+            <td class="gain">+7万円</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p>130万円の壁でも同じことが起きます。年収129万円（手取り約127万円）から135万円に増やすと、社会保険料が約19万円発生して手取りが<strong>約112万円まで落ちます。</strong>6万円稼ぎを増やしたのに手取りは14万円以上も減ります。</p>
+
+    <p>手取りが扶養内上限（129万円時の約127万円）を超えるのは年収160万円前後になってからです。</p>
+
+    <h2 id="chart">年収ごとの手取り一覧（大企業勤務・週20h以上）</h2>
+
+    <p>大企業に勤めて週20時間以上働く場合の年収と手取りの関係をまとめました。</p>
+
+    <div class="bar-chart">
+      <div class="bar-row">
+        <div class="bar-label">100万</div>
+        <div class="bar-track"><div class="bar-fill safe" style="width:77%">手取り100万円</div></div>
+      </div>
+      <div class="bar-row">
+        <div class="bar-label">105万</div>
+        <div class="bar-track"><div class="bar-fill safe" style="width:81%">手取り105万円</div></div>
+      </div>
+      <div class="bar-row">
+        <div class="bar-label">110万</div>
+        <div class="bar-track"><div class="bar-fill danger" style="width:73%">手取り約94万円 ⚠</div></div>
+      </div>
+      <div class="bar-row">
+        <div class="bar-label">120万</div>
+        <div class="bar-track"><div class="bar-fill warn" style="width:79%">手取り約102万円</div></div>
+      </div>
+      <div class="bar-row">
+        <div class="bar-label">130万</div>
+        <div class="bar-track"><div class="bar-fill danger" style="width:71%">手取り約91万円 ⚠</div></div>
+      </div>
+      <div class="bar-row">
+        <div class="bar-label">150万</div>
+        <div class="bar-track"><div class="bar-fill warn" style="width:80%">手取り約104万円</div></div>
+      </div>
+      <div class="bar-row">
+        <div class="bar-label">160万</div>
+        <div class="bar-track"><div class="bar-fill safe" style="width:84%">手取り約109万円</div></div>
+      </div>
+      <div class="bar-row">
+        <div class="bar-label">200万</div>
+        <div class="bar-track"><div class="bar-fill safe" style="width:96%">手取り約125万円</div></div>
+      </div>
+    </div>
+
+    <p>グラフを見ると、110万円と130万円のあたりで明確にバーが縮んでいます。年収が増えても手取りが減る「逆転現象」がはっきり見えます。</p>
+
+    <h2 id="when-loss">本当に「損する年収帯」はどこか</h2>
+
+    <p>シミュレーションをまとめると、損する年収帯は次のように整理できます。</p>
+
+    <div class="callout warn">
+      <div class="callout-label">損する年収帯（51人以上企業・週20h以上）</div>
+      ・<strong>106万円〜約125万円</strong>：106万円の壁で社会保険料が発生。手取りが105万円以下になる<br>
+      ・<strong>130万円〜約158万円</strong>：130万円の壁でさらに社会保険料が増加。手取りが129万円以下になる
+    </div>
+
+    <p>逆に言えば、この範囲を避けて働くことが手取りを最大化する鍵です。具体的には次の3つの戦略が有効です。</p>
+
+    <h2 id="strategy">扶養を外れるなら年収いくら目指すべきか</h2>
+
+    <h3>戦略①：扶養内上限ギリギリで止める</h3>
+    <p>106万円の壁が適用される場合は<strong>年収105万円前後</strong>、適用されない場合は<strong>年収129万円前後</strong>に収めるのが最も手取りが多くなります。「損する年収帯」を完全に回避できます。</p>
+
+    <h3>戦略②：割り切って扶養を外れ、年収160万円以上を目指す</h3>
+    <p>社会保険料を払っても手取りが扶養内を上回るのは年収160万円前後です。将来の年金・各種手当も考えると、<strong>160万円以上に収入を増やす</strong>のが長期的には有利です。フルタイム勤務や時給アップ交渉を検討しましょう。</p>
+
+    <h3>戦略③：年収200万円以上を目指す</h3>
+    <p>手取りベースで「完全に扶養外れが得」になるのは年収200万円を超えたあたりです。キャリアアップや転職も含めて、<strong>中長期的な視点で判断する</strong>ことが重要です。</p>
+
+    <div class="callout good">
+      <div class="callout-label">社会保険加入にもメリットがあります</div>
+      扶養を外れて社会保険に加入すると、<strong>傷病手当金（病気・ケガで働けない期間の収入補償）・出産手当金・将来の年金増加</strong>といったメリットも得られます。目先の手取りだけで判断しないことも大切です。
+    </div>
+
+    <h2 id="summary">まとめ</h2>
+
+    <p>この記事の内容を整理します。</p>
+
+    <div class="callout info">
+      <div class="callout-label">まとめ</div>
+      ・扶養内で働く方が得なのは<strong>年収105万円以下（大企業）または129万円以下（小企業）</strong>まで<br>
+      ・それを超えると社会保険料が発生し、手取りが一時的に大きく減る「損する年収帯」がある<br>
+      ・損する年収帯を抜けるには<strong>160万円以上</strong>を目指す必要がある<br>
+      ・長期的には社会保険加入にも年金・手当のメリットがある
+    </div>
+
+    <p>自分の年収が今どの壁に近いのか、手取りがどう変わるかは個人の状況によって異なります。以下のツールで実際の数字を確かめてみてください。</p>
+
+    <div class="cta-box">
+      <h3>自分の手取りを今すぐシミュレーション</h3>
+      <p>年収・勤務先規模を入力するだけで、<br>扶養内との手取り差を即座に比較できます。</p>
+      <a href="/" class="cta-btn">無料で試してみる →</a>
+    </div>
+
+  </div>
+
+  <div class="related">
+    <div class="related-title">RELATED ARTICLES</div>
+    <div class="related-grid">
+      <a href="/article-103man-wall.html" class="related-card">
+        <div class="r-cat">扶養・年収の壁</div>
+        <div class="r-ttl">103万円の壁って結局2025年からどう変わったの？</div>
+      </a>
+      <a href="/article-yearend-checklist.html" class="related-card">
+        <div class="r-cat">年末調整</div>
+        <div class="r-ttl">パート主婦が年末に絶対確認すべき年収チェックリスト</div>
+      </a>
+    </div>
+  </div>
+
+</div>
+
+<footer class="site-footer">
+  © 2025 kurashicalc
+  <a href="/privacy.html">プライバシーポリシー</a>
+  <a href="/contact.html">お問い合わせ</a>
+</footer>
+</body>
+</html>

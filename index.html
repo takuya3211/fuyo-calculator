@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>扶養ライン判定ツール 2025年最新版｜年収の壁を一発チェック | kurashicalc</title>
-<meta name="description" content="2025年税制改正対応。年収・勤務先規模・配偶者収入を入力するだけで、扶養を外れるか・手取りが増えるか減るかを即座に判定します。">
+<meta name="description" content="2025年税制改正対応。年収と勤務条件を入力するだけで、税金・社会保険・配偶者控除（特別控除）への影響を概算で判定します。">
 <link rel="stylesheet" href="style.css">
 <style>
 .hero {
@@ -22,7 +22,7 @@
   line-height: 1.25; letter-spacing: -0.02em; margin-bottom: 16px;
 }
 .hero h1 em { font-style: normal; color: var(--accent); border-bottom: 3px solid var(--accent); padding-bottom: 1px; }
-.hero-sub { font-size: 14px; color: var(--text2); max-width: 460px; margin: 0 auto 14px; }
+.hero-sub { font-size: 14px; color: var(--text2); max-width: 520px; margin: 0 auto 14px; line-height: 1.8; }
 .hero-update {
   display: inline-flex; align-items: center; gap: 6px;
   font-family: 'DM Mono', monospace; font-size: 12px; color: var(--muted);
@@ -42,6 +42,61 @@
 .slider-ticks { display: flex; justify-content: space-between; font-family: 'DM Mono', monospace; font-size: 11px; color: var(--muted); margin-top: 6px; }
 .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 28px; }
 @media(max-width:540px){ .form-grid { grid-template-columns: 1fr; } }
+
+/* 世帯手取り比較 */
+.household-card {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 28px; margin-bottom: 20px;
+  box-shadow: var(--shadow);
+}
+.household-title {
+  font-size: 14px; font-weight: 700; margin-bottom: 20px;
+  display: flex; align-items: center; gap: 8px;
+}
+.household-title::before { content:''; width:4px; height:18px; background:var(--accent); border-radius:2px; flex-shrink:0; }
+.hh-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+@media(max-width:480px){ .hh-grid { grid-template-columns: 1fr; } }
+.hh-box {
+  background: var(--bg); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); padding: 18px; text-align: center;
+}
+.hh-box.highlight { border-color: var(--green); background: var(--green-bg); }
+.hh-box.highlight-warn { border-color: var(--red); background: var(--red-bg); }
+.hh-label { font-size: 11px; color: var(--muted); font-family:'DM Mono',monospace; margin-bottom: 6px; }
+.hh-amount { font-family:'DM Mono',monospace; font-size: 22px; font-weight:700; color: var(--text); }
+.hh-box.highlight .hh-amount { color: var(--green); }
+.hh-box.highlight-warn .hh-amount { color: var(--red); }
+.hh-sub { font-size: 11px; color: var(--muted); margin-top: 4px; font-family:'DM Mono',monospace; }
+.hh-diff { text-align:center; font-size:15px; padding: 12px; background: var(--bg2); border-radius: var(--radius-sm); }
+
+/* 配偶者控除インジケーター */
+.deduction-bar-card {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: var(--radius); overflow: hidden; margin-bottom: 20px;
+  box-shadow: var(--shadow);
+}
+.deduction-bar-head {
+  padding: 14px 24px; border-bottom: 1px solid var(--border);
+  font-family:'DM Mono',monospace; font-size:11px; letter-spacing:0.14em;
+  color: var(--accent); background: var(--bg2);
+}
+.ded-row {
+  display: flex; align-items: center; padding: 14px 24px;
+  border-bottom: 1px solid var(--border); gap: 14px;
+}
+.ded-row:last-child { border-bottom: none; }
+.ded-label { flex: 1; font-size: 13px; color: var(--text2); }
+.ded-label strong { display: block; font-size: 14px; color: var(--text); margin-bottom: 2px; }
+.ded-amount { font-family:'DM Mono',monospace; font-size:15px; font-weight:700; width: 110px; text-align: right; flex-shrink: 0; }
+.ded-amount.active { color: var(--green); }
+.ded-amount.zero { color: var(--muted); }
+
+/* 小さめ注記 */
+.small-note {
+  font-size: 11px; color: var(--muted);
+  font-family: 'DM Mono', monospace; line-height: 1.85;
+  margin-top: 10px;
+}
 </style>
 </head>
 <body>
@@ -57,42 +112,83 @@
 </nav>
 
 <div class="hero anim-down">
-  <div class="hero-badge">2025年 令和7年度税制改正 完全対応</div>
+  <div class="hero-badge">2025年（令和7年分）税制改正 対応</div>
   <h1>扶養ライン<em>判定</em>ツール</h1>
-  <p class="hero-sub">年収・勤務先規模・配偶者収入を入力するだけで<br>「あと何円まで働けるか」を即座に確認できます</p>
-  <div class="hero-update">103万円の壁 → 123万円に改正済み</div>
+  <p class="hero-sub">
+    年収と勤務条件を入力するだけで、税金・社会保険・配偶者控除（特別控除）の影響を概算で判定します。<br>
+    ※ 社会保険は「短時間労働者の加入要件（週20h・月8.8万円など）」も入力条件に含めました（概算）。
+  </p>
+  <div class="hero-update">配偶者控除・世帯手取りへの影響も計算</div>
   <div class="walls-strip">
-    <div class="wall-pill">110万：住民税</div>
-    <div class="wall-pill">123万：所得税（2025年〜）</div>
-    <div class="wall-pill">106万：社保（51人以上）</div>
-    <div class="wall-pill">130万：社保（全社）</div>
-    <div class="wall-pill">160万：配偶者控除</div>
+    <div class="wall-pill">123万：所得税（目安）</div>
+    <div class="wall-pill">106万：社保（51人以上・月8.8万）</div>
+    <div class="wall-pill">130万：社保（扶養から外れる目安）</div>
+    <div class="wall-pill">160万：配偶者特別控除（満額）</div>
   </div>
 </div>
 
 <div class="container">
   <div class="card anim-up">
-    <div class="section-eyebrow">あなたの情報を入力</div>
+    <div class="section-eyebrow">情報を入力</div>
+
     <div class="slider-section">
       <div class="slider-display">
-        <div class="s-label">あなたの年収</div>
+        <div class="s-label">あなた（パート・アルバイト）の年収</div>
         <span class="s-amount" id="income-display">120</span><span class="s-unit">万円</span>
       </div>
-      <input type="range" id="income-slider" min="0" max="300" step="1" value="120" oninput="syncIncome(this.value)">
-      <div class="slider-ticks"><span>0</span><span>50</span><span>100</span><span>150</span><span>200</span><span>250</span><span>300万</span></div>
+      <input type="range" id="income-slider" min="0" max="250" step="1" value="120" oninput="syncIncome(this.value)">
+      <div class="slider-ticks">
+        <span>0</span><span>50</span><span>100</span><span>150</span><span>200</span><span>250万</span>
+      </div>
     </div>
+
     <div class="form-grid">
       <div class="field">
-        <label><strong>年収（手入力可）</strong></label>
+        <label><strong>あなたの年収（手入力可）</strong></label>
         <div class="input-wrap">
           <input type="number" id="income-input" value="120" min="0" max="999" oninput="syncIncome(this.value, true)">
           <span class="input-unit">万円</span>
         </div>
-        <span class="field-hint">交通費を除いた年間給与収入</span>
+        <span class="field-hint">交通費を除いた年間給与収入（賞与込みの場合は目安がズレます）</span>
       </div>
+
       <div class="field">
-        <label><strong>勤務先の従業員数</strong>
-          <span class="tip" data-tip="106万円の社会保険加入義務は51人以上の企業が対象（2024年10月〜）。法人全体の合計で判断します。">?</span>
+        <label>
+          <strong>扶養する側（夫など）の年収</strong>
+          <span class="tip" data-tip="配偶者控除・配偶者特別控除の額は、扶養する側の収入（給与）区分によって変わります。1,195万円超の場合は控除がゼロになります。">?</span>
+        </label>
+
+        <div class="input-wrap">
+          <select id="spouse-income-mode" onchange="syncSpouseIncomeMode()">
+            <option value="band" selected>区分で選ぶ（かんたん）</option>
+            <option value="custom">金額を入力する（正確）</option>
+          </select>
+        </div>
+
+        <div class="input-wrap" id="spouse-income-band-wrap" style="margin-top:10px;">
+          <select id="spouse-income-band" onchange="syncSpouseIncomeBand()">
+            <option value="1000" selected>〜1,095万円（控除：満額）</option>
+            <option value="1120">1,095〜1,145万円（控除：減額①）</option>
+            <option value="1170">1,145〜1,195万円（控除：減額②）</option>
+            <option value="1300">1,195万円超（控除なし）</option>
+          </select>
+        </div>
+
+        <div class="input-wrap" id="spouse-income-custom-wrap" style="margin-top:10px; display:none;">
+          <input type="number" id="spouse-income-input" value="500" min="0" max="9999">
+          <span class="input-unit">万円</span>
+        </div>
+
+        <!-- 計算用の値（区分選択時はこの値を使用） -->
+        <input type="hidden" id="spouse-income-hidden" value="1000">
+
+        <span class="field-hint">「区分で選ぶ」は配偶者控除の区分判定を簡単にするための目安値で計算します。世帯手取りを正確に見たい場合は「金額を入力する」を選んでください。</span>
+      </div>
+
+      <div class="field">
+        <label>
+          <strong>あなたの勤務先の従業員数</strong>
+          <span class="tip" data-tip="短時間労働者の社会保険加入要件（いわゆる106万円相当）の対象は、企業規模などで決まります。法人全体の合計で判断します。">?</span>
         </label>
         <div class="input-wrap">
           <select id="company-size">
@@ -103,31 +199,73 @@
         </div>
         <span class="field-hint">法人全体の合計従業員数</span>
       </div>
+
       <div class="field">
         <label><strong>週の所定労働時間</strong></label>
         <div class="input-wrap">
-          <input type="number" id="weekly-hours" value="25" min="1" max="40">
+          <input type="number" id="weekly-hours" value="25" min="1" max="60">
           <span class="input-unit">時間</span>
         </div>
         <span class="field-hint">残業除く契約上の週時間</span>
       </div>
+
       <div class="field">
-        <label><strong>配偶者の年収</strong>
-          <span class="tip" data-tip="配偶者控除・配偶者特別控除の適用確認に使います。配偶者の年収が1,195万円超の場合は控除対象外です。">?</span>
+        <label>
+          <strong>学生（昼間学生等）ですか？</strong>
+          <span class="tip" data-tip="短時間労働者の厚生年金・健康保険の加入要件では「学生」は原則対象外となる場合があります（例外あり）。">?</span>
         </label>
         <div class="input-wrap">
-          <select id="spouse-income">
-            <option value="none">配偶者なし・独身</option>
-            <option value="low" selected>〜500万円</option>
-            <option value="mid">500〜1,000万円</option>
-            <option value="high">1,000〜1,195万円</option>
-            <option value="over">1,195万円超</option>
+          <select id="is-student">
+            <option value="no" selected>いいえ</option>
+            <option value="yes">はい（学生）</option>
           </select>
         </div>
-        <span class="field-hint">配偶者控除の適用確認用</span>
+        <span class="field-hint">学生かどうかで 106万円相当の判定が変わることがあります</span>
+      </div>
+
+      <div class="field">
+        <label>
+          <strong>雇用期間：2か月超の見込み</strong>
+          <span class="tip" data-tip="短時間労働者の加入要件では「2か月を超えて使用される見込み」等が要件に含まれます。">?</span>
+        </label>
+        <div class="input-wrap">
+          <select id="over-2months">
+            <option value="yes" selected>はい（2か月超）</option>
+            <option value="no">いいえ（短期）</option>
+          </select>
+        </div>
+        <span class="field-hint">不明な場合は「はい」でOK（安全側）</span>
+      </div>
+
+      <div class="field">
+        <label><strong>扶養する人との関係</strong></label>
+        <div class="input-wrap">
+          <select id="relation">
+            <option value="spouse">配偶者（夫・妻）</option>
+            <option value="parent">親（仕送り等）</option>
+            <option value="none">扶養者なし・独身</option>
+          </select>
+        </div>
+        <span class="field-hint">配偶者の場合のみ配偶者控除（夫側）を計算</span>
+      </div>
+
+      <div class="field" id="spouse-age-field">
+        <label><strong>あなた（パート側）の年齢</strong></label>
+        <div class="input-wrap">
+          <select id="your-age">
+            <option value="under70">70歳未満</option>
+            <option value="over70">70歳以上（老人控除対象）</option>
+          </select>
+        </div>
+        <span class="field-hint">70歳以上は配偶者控除が増額されます</span>
       </div>
     </div>
+
     <button class="btn-primary" onclick="calculate()">扶養ラインを判定する →</button>
+
+    <div class="small-note">
+      ※「月8.8万円以上」は年収から月収換算（年収÷12）で判定しています。賞与・月ごとの変動が大きい場合は実態とズレます。
+    </div>
   </div>
 
   <div id="result" style="display:none;">
@@ -136,35 +274,45 @@
       <div class="verdict-title" id="verdict-title"></div>
       <div class="verdict-desc" id="verdict-desc"></div>
     </div>
+
     <div class="walls-card">
-      <div class="walls-card-head">WALL CHECK — 各ラインとの距離</div>
+      <div class="walls-card-head">WALL CHECK — 各ラインとの距離（目安）</div>
       <div id="walls-list"></div>
     </div>
-    <div class="compare-card">
-      <div class="compare-title">扶養内に抑えた場合 vs 現在の年収</div>
-      <div class="compare-grid">
-        <div class="compare-box" id="box-inside">
-          <div class="c-label">扶養内に抑えた場合</div>
-          <div class="c-amount" id="inside-amount">—</div>
-          <div class="c-note" id="inside-note"></div>
+
+    <div class="deduction-bar-card" id="deduction-section">
+      <div class="deduction-bar-head">SPOUSE DEDUCTION — 配偶者控除（夫側）の状況</div>
+      <div id="deduction-rows"></div>
+    </div>
+
+    <div class="household-card">
+      <div class="household-title">世帯手取り比較：扶養内に抑えた場合 vs 現在の年収</div>
+      <div class="hh-grid">
+        <div class="hh-box" id="hh-inside">
+          <div class="hh-label">扶養内に抑えた場合（目安）</div>
+          <div class="hh-amount" id="hh-inside-amount">—</div>
+          <div class="hh-sub" id="hh-inside-note"></div>
         </div>
-        <div class="compare-arrow">→</div>
-        <div class="compare-box" id="box-current">
-          <div class="c-label">現在の年収のまま</div>
-          <div class="c-amount" id="current-amount">—</div>
-          <div class="c-note" id="current-note"></div>
+        <div class="hh-box" id="hh-current">
+          <div class="hh-label">現在の年収のまま（目安）</div>
+          <div class="hh-amount" id="hh-current-amount">—</div>
+          <div class="hh-sub" id="hh-current-note"></div>
         </div>
       </div>
-      <div class="compare-diff" id="compare-diff"></div>
+      <div class="hh-diff" id="hh-diff"></div>
     </div>
+
     <div class="card" style="animation:none;">
       <div class="section-eyebrow">あなたへのアドバイス</div>
       <div class="advice-list" id="advice-list"></div>
     </div>
+
     <span class="reset-link" onclick="resetForm()">← 入力をやり直す</span>
+
     <div class="footer-note">
-      ※本ツールの計算結果は概算です。実際の手取りは自治体・勤務先規定・各種控除・扶養家族数などにより異なります。重要な判断の前には税理士・社会保険労務士にご相談ください。<br>
-      ※2025年（令和7年）税制改正反映済。基礎控除58万円・給与所得控除65万円・非課税ライン123万円。
+      ※本ツールの計算結果は概算です。実際の税額・手取り額は自治体・勤務先・各種控除・扶養家族数・月額賃金の実態などにより異なります。重要な判断の前には税理士・社会保険労務士等の専門家にご相談ください。<br>
+      ※本ページは「2025年（令和7年分）税制改正」を前提にしています。将来改正（例：短時間労働者の賃金要件の見直し等）で判定条件が変わる可能性があります。<br>
+      ※所得税：給与所得控除（最低65万円）・基礎控除（合計所得により段階）を反映。住民税：基礎控除43万円・所得割10%・均等割＋森林環境税（合計5,500円相当）を「課税ベースがある場合」に計上（概算）。社会保険料率：14.15%を便宜上使用（実際は健保組合・都道府県・年度で変動）。
     </div>
   </div>
 </div>
@@ -177,137 +325,407 @@
 
 <script>
 const WALLS = [
-  { amount:110, label:'住民税の壁', desc:'超えると住民税（約10%）が発生します', color:'#1a7a4a' },
-  { amount:123, label:'所得税の壁（2025年〜）', desc:'旧103万円から改正。超えると所得税・配偶者控除に影響', color:'#a0720a' },
-  { amount:106, label:'社会保険の壁（51人以上）', desc:'週20h以上・月8.8万円以上で社会保険加入義務', color:'#c07a20', bigOnly:true },
-  { amount:130, label:'社会保険の壁（全社共通）', desc:'全事業所共通。超えると自身で健康保険・国民年金に加入', color:'#c0392b' },
-  { amount:160, label:'配偶者特別控除（満額）', desc:'配偶者が受ける控除の満額ライン（旧150万円から改正）', color:'#6d28d9' },
+  { amount:123, label:'所得税の目安（給与収入）', desc:'給与所得控除＋基礎控除で、所得税が0になりやすい目安（個別事情で変動）', color:'#a0720a' },
+  { amount:106, label:'社会保険の目安（51人以上）', desc:'週20h以上・月8.8万円以上・学生除外などで加入対象（入力条件で判定）', color:'#c07a20', bigOnly:true },
+  { amount:130, label:'社会保険の目安（扶養から外れる）', desc:'健康保険の扶養（被扶養者）から外れる目安。実務は保険者の基準により判定', color:'#c0392b' },
+  { amount:160, label:'配偶者特別控除（満額）', desc:'ここまでは夫側で38万円の控除が満額適用（要件あり）。超えると段階的に減額', color:'#6d28d9' },
 ];
-function fmt(n){ return Math.round(n).toLocaleString()+'万円'; }
-function syncIncome(val, fromInput){
-  const n = Math.min(parseFloat(val)||0, fromInput?999:300);
-  document.getElementById('income-display').textContent = Math.round(n);
-  if(!fromInput) document.getElementById('income-input').value = Math.round(n);
-  if(n<=300) document.getElementById('income-slider').value = Math.round(n);
+
+function empDed(income) {
+  if (income <= 162.5) return 65;
+  if (income <= 180)   return income * 0.4 - 10;
+  if (income <= 360)   return income * 0.3 + 8;
+  if (income <= 660)   return income * 0.2 + 44;
+  if (income <= 850)   return income * 0.1 + 110;
+  return 195;
 }
-function calcTake(income, isBig, hours){
-  const needSocial = (isBig && hours>=20 && income>=106) || income>=130;
-  const socialIns = needSocial ? income*0.1415 : 0;
-  const taxable = Math.max(0, income-65-58);
-  let incomeTax = 0;
-  if(taxable>0){
-    if(taxable<=195) incomeTax=taxable*0.05;
-    else if(taxable<=330) incomeTax=9.75+(taxable-195)*0.10;
-    else incomeTax=9.75+13.5+(taxable-330)*0.20;
+
+function basicDedIT(income) {
+  const netIncome = Math.max(0, income - empDed(income));
+  if (netIncome <= 132) return 95;
+  if (netIncome <= 336) return 88;
+  if (netIncome <= 489) return 68;
+  if (netIncome <= 655) return 63;
+  if (netIncome <= 2350) return 58;
+  if (netIncome <= 2400) return 48;
+  if (netIncome <= 2450) return 32;
+  if (netIncome <= 2500) return 16;
+  return 0;
+}
+
+function incomeTaxFromTaxable(t) {
+  if (t <= 0)    return 0;
+  if (t <= 195)  return t * 0.05;
+  if (t <= 330)  return 9.75  + (t - 195)  * 0.10;
+  if (t <= 695)  return 23.25 + (t - 330)  * 0.20;
+  if (t <= 900)  return 96.25 + (t - 695)  * 0.23;
+  if (t <= 1800) return 143.4 + (t - 900)  * 0.33;
+  if (t <= 4000) return 440.4 + (t - 1800) * 0.40;
+  return 1320.4  + (t - 4000) * 0.45;
+}
+
+function residentTaxApprox(income, socialIns, includeKintoWari=true) {
+  const ded = empDed(income);
+  const base = Math.max(0, income - ded - 43 - socialIns);
+  if (base <= 0) return 0;
+  const kinto = includeKintoWari ? 0.55 : 0;
+  return base * 0.10 + kinto;
+}
+
+function needSocialInsurance(income, isBig, hours, isStudent, over2months) {
+  const monthly = income / 12; // 万円
+  const shortTimeEligible = isBig && hours >= 20 && monthly >= 8.8 && !isStudent && over2months;
+  const loseDependent = income >= 130;
+  return shortTimeEligible || loseDependent;
+}
+
+function calcPartTake(income, isBig, hours, isStudent, over2months) {
+  const needSocial = needSocialInsurance(income, isBig, hours, isStudent, over2months);
+  const socialIns  = needSocial ? income * 0.1415 : 0;
+
+  const ded    = empDed(income);
+  const basic  = basicDedIT(income);
+  const taxIT  = Math.max(0, income - ded - basic - socialIns);
+  const incomeTax = incomeTaxFromTaxable(taxIT);
+
+  const residentTax = residentTaxApprox(income, socialIns, true);
+
+  const take = income - socialIns - incomeTax - residentTax;
+  return { take, socialIns, incomeTax, residentTax, needSocial };
+}
+
+function calcSpouseDeduction(partIncome, spouseIncome, isOld) {
+  let cls;
+  if (spouseIncome > 1195) {
+    return { deductionType: 'none', deductionAmount: 0, spouseIncomeClass: 'over1195' };
+  } else if (spouseIncome > 1145) cls = 'C';
+  else if   (spouseIncome > 1095) cls = 'B';
+  else                             cls = 'A';
+
+  const partNet = Math.max(0, partIncome - empDed(partIncome));
+
+  if (partNet <= 58) {
+    const base = isOld ? { A:48, B:32, C:16 } : { A:38, B:26, C:13 };
+    return { deductionType: 'control', deductionAmount: base[cls], spouseIncomeClass: cls };
   }
-  const residentTax = income>110 ? Math.max(0,income-65-45)*0.10 : 0;
-  return {take:income-socialIns-incomeTax-residentTax, socialIns, incomeTax, needSocial};
+
+  if (partNet > 133) {
+    return { deductionType: 'none', deductionAmount: 0, spouseIncomeClass: cls };
+  }
+
+  const tableA = [
+    { max:  95, A:38, B:26, C:13 },
+    { max: 100, A:36, B:24, C:12 },
+    { max: 105, A:31, B:21, C:11 },
+    { max: 110, A:26, B:18, C: 9 },
+    { max: 115, A:21, B:14, C: 7 },
+    { max: 120, A:16, B:11, C: 6 },
+    { max: 125, A:11, B: 8, C: 4 },
+    { max: 130, A: 6, B: 4, C: 2 },
+    { max: 133, A: 3, B: 2, C: 1 },
+  ];
+  for (const row of tableA) {
+    if (partNet <= row.max) {
+      return { deductionType: 'special', deductionAmount: row[cls], spouseIncomeClass: cls };
+    }
+  }
+  return { deductionType: 'none', deductionAmount: 0, spouseIncomeClass: cls };
 }
-function calculate(){
-  const income = parseFloat(document.getElementById('income-input').value)||0;
-  const isBig = document.getElementById('company-size').value !== 'small';
-  const hours = parseFloat(document.getElementById('weekly-hours').value)||0;
-  const spouse = document.getElementById('spouse-income').value;
-  const current = calcTake(income, isBig, hours);
-  const safeLimit = (isBig && hours>=20) ? 105 : 109;
-  const inside = calcTake(safeLimit, false, hours);
+
+function calcSpouseTaxSaving(spouseIncome, deductionAmount) {
+  if (deductionAmount === 0) return 0;
+  const ded    = empDed(spouseIncome);
+  const basic  = basicDedIT(spouseIncome);
+  const socialIns = spouseIncome * 0.1415;
+  const taxable = Math.max(0, spouseIncome - ded - basic - socialIns);
+  const taxWith    = incomeTaxFromTaxable(Math.max(0, taxable - deductionAmount));
+  const taxWithout = incomeTaxFromTaxable(taxable);
+  return Math.max(0, taxWithout - taxWith);
+}
+
+function calcHouseholdTake(partIncome, spouseIncome, isBig, hours, isOld, isSpouse, isStudent, over2months) {
+  const part = calcPartTake(partIncome, isBig, hours, isStudent, over2months);
+
+  const spouseDed     = empDed(spouseIncome);
+  const spouseBasic   = basicDedIT(spouseIncome);
+  const spouseSocial  = spouseIncome * 0.1415;
+  let spouseDeductionAmount = 0;
+
+  if (isSpouse) {
+    const { deductionAmount } = calcSpouseDeduction(partIncome, spouseIncome, isOld);
+    spouseDeductionAmount = deductionAmount;
+  }
+
+  const spouseTaxable  = Math.max(0, spouseIncome - spouseDed - spouseBasic - spouseSocial - spouseDeductionAmount);
+  const spouseIT       = incomeTaxFromTaxable(spouseTaxable);
+  const spouseRT       = residentTaxApprox(spouseIncome, spouseSocial, true);
+  const spouseTake     = spouseIncome - spouseSocial - spouseIT - spouseRT;
+
+  return {
+    partTake:   part.take,
+    spouseTake,
+    total:      part.take + spouseTake,
+    partDetail: part,
+    spouseDeductionAmount,
+  };
+}
+
+function fmt(n)  { return (Math.round(n * 10) / 10) + '万円'; }
+function fmtI(n) { return Math.round(n).toLocaleString() + '万円'; }
+
+function syncIncome(val, fromInput) {
+  const n = Math.min(parseFloat(val) || 0, fromInput ? 999 : 250);
+  document.getElementById('income-display').textContent = Math.round(n);
+  if (!fromInput) document.getElementById('income-input').value  = Math.round(n);
+  if (n <= 250)   document.getElementById('income-slider').value = Math.round(n);
+}
+
+
+function getSpouseIncome() {
+  const mode = document.getElementById('spouse-income-mode')?.value || 'band';
+  if (mode === 'custom') {
+    return parseFloat(document.getElementById('spouse-income-input').value) || 0;
+  }
+  return parseFloat(document.getElementById('spouse-income-hidden').value) || 0;
+}
+
+function syncSpouseIncomeMode() {
+  const mode = document.getElementById('spouse-income-mode').value;
+  const bandWrap = document.getElementById('spouse-income-band-wrap');
+  const customWrap = document.getElementById('spouse-income-custom-wrap');
+  if (mode === 'custom') {
+    bandWrap.style.display = 'none';
+    customWrap.style.display = 'block';
+  } else {
+    bandWrap.style.display = 'block';
+    customWrap.style.display = 'none';
+    syncSpouseIncomeBand();
+  }
+}
+
+function syncSpouseIncomeBand() {
+  const v = document.getElementById('spouse-income-band').value;
+  document.getElementById('spouse-income-hidden').value = v;
+}
+
+function calculate() {
+  const income       = parseFloat(document.getElementById('income-input').value)   || 0;
+  const spouseIncome = getSpouseIncome();
+
+  const companySel   = document.getElementById('company-size').value;
+  const isBig        = (companySel === 'large') || (companySel === 'unknown');
+
+  const hours        = parseFloat(document.getElementById('weekly-hours').value)   || 0;
+  const relation     = document.getElementById('relation').value;
+  const isOld        = document.getElementById('your-age').value === 'over70';
+  const isSpouse     = relation === 'spouse';
+
+  const isStudent    = document.getElementById('is-student').value === 'yes';
+  const over2months  = document.getElementById('over-2months').value === 'yes';
+
+  const shortTimeWouldApply = isBig && hours >= 20 && !isStudent && over2months;
+  const safeLimit = shortTimeWouldApply ? 105 : 129;
+
+  const current = calcHouseholdTake(income, spouseIncome, isBig, hours, isOld, isSpouse, isStudent, over2months);
+  const inside  = calcHouseholdTake(safeLimit, spouseIncome, isBig, hours, isOld, isSpouse, isStudent, over2months);
 
   const result = document.getElementById('result');
   result.style.display = 'block';
-  setTimeout(()=>result.scrollIntoView({behavior:'smooth',block:'start'}),50);
+  setTimeout(() => result.scrollIntoView({ behavior:'smooth', block:'start' }), 50);
 
   const box = document.getElementById('verdict-box');
   box.className = 'verdict';
-  let breached = null;
-  if(income>=130) breached='130万円（社会保険）';
-  else if(isBig&&hours>=20&&income>=106) breached='106万円（社会保険・大企業）';
-  else if(income>=123) breached='123万円（所得税）';
-  else if(income>=110) breached='110万円（住民税）';
 
-  if(!breached){
+  const needSocial = needSocialInsurance(income, isBig, hours, isStudent, over2months);
+  const monthlyWageOK = (income/12) >= 8.8;
+
+  let headline = '';
+  let desc = '';
+
+  if (!needSocial && income < 123) {
     box.classList.add('safe');
-    document.getElementById('verdict-icon').textContent='✅';
-    document.getElementById('verdict-title').textContent='扶養内です。安心して働けます';
-    document.getElementById('verdict-desc').innerHTML=`現在の年収 <strong>${fmt(income)}</strong> はすべての主要ラインを下回っています。`;
-  } else if(income<130){
+    document.getElementById('verdict-icon').textContent  = '✅';
+    headline = '大きな壁は超えていない可能性が高いです';
+    desc = `年収 <strong>${fmtI(income)}</strong> は、税金・社会保険が発生しにくい範囲に収まっています（個別事情で変動）。`;
+  } else if (needSocial && income < 130) {
     box.classList.add('warn');
-    document.getElementById('verdict-icon').textContent='⚠️';
-    document.getElementById('verdict-title').textContent=`注意：${breached} を超えています`;
-    document.getElementById('verdict-desc').innerHTML=`年収 <strong>${fmt(income)}</strong> は ${breached} を超えています。下記の比較を確認してください。`;
-  } else {
+    document.getElementById('verdict-icon').textContent  = '⚠️';
+    headline = '社会保険（短時間労働者）に該当する可能性があります';
+    desc = `週 <strong>${hours}時間</strong>、月収換算 <strong>${fmt(income/12)}</strong>、学生：<strong>${isStudent ? 'はい' : 'いいえ'}</strong>、2か月超：<strong>${over2months ? 'はい' : 'いいえ'}</strong> から判定しました。`;
+    if (!monthlyWageOK) {
+      desc += `<br>※ 月8.8万円未満のため、短時間加入要件の「賃金要件」は満たしていません（年収÷12換算）。`;
+    }
+  } else if (income >= 130) {
     box.classList.add('danger');
-    document.getElementById('verdict-icon').textContent='🔴';
-    document.getElementById('verdict-title').textContent=`扶養外：${breached} を超過`;
-    document.getElementById('verdict-desc').innerHTML=`年収 <strong>${fmt(income)}</strong> は複数のラインを超えています。社会保険料・所得税・住民税がすべて発生します。`;
+    document.getElementById('verdict-icon').textContent  = '🔴';
+    headline = '扶養を外れる可能性が高いです（130万円目安）';
+    desc = `年収 <strong>${fmtI(income)}</strong> は、健康保険の扶養判定（130万円目安）を超える可能性があります。社会保険料・税金の影響を下で確認してください。`;
+  } else {
+    box.classList.add('warn');
+    document.getElementById('verdict-icon').textContent  = '⚠️';
+    headline = '税金の影響が出始める可能性があります';
+    desc = `年収 <strong>${fmtI(income)}</strong> は、所得税・住民税が発生し始める範囲に入る可能性があります（控除状況で変動）。`;
   }
 
+  document.getElementById('verdict-title').textContent = headline;
+  document.getElementById('verdict-desc').innerHTML    = desc;
+
   const list = document.getElementById('walls-list');
-  list.innerHTML='';
-  WALLS.forEach(w=>{
-    if(w.bigOnly&&!isBig) return;
-    const diff = income-w.amount;
-    const pct = Math.min(100,(income/w.amount)*100);
-    let badge,cls;
-    if(diff>=5){badge='超過';cls='over';}
-    else if(diff>=-5){badge='要注意';cls='near';}
-    else{badge='余裕';cls='under';}
-    const margin = diff>=0 ? `+${diff.toFixed(0)}万超` : `残り${Math.abs(diff).toFixed(0)}万`;
+  list.innerHTML = '';
+  WALLS.forEach(w => {
+    if (w.bigOnly && !isBig) return;
+
+    const diff = income - w.amount;
+    const pct  = Math.min(100, (income / w.amount) * 100);
+    let badge, cls;
+    if      (diff >=  5) { badge = '超過';   cls = 'over'; }
+    else if (diff >= -5) { badge = '要注意'; cls = 'near'; }
+    else                 { badge = '余裕';   cls = 'under'; }
+    const margin = diff >= 0 ? `+${diff.toFixed(0)}万超` : `残り${Math.abs(diff).toFixed(0)}万`;
+
     const row = document.createElement('div');
-    row.className='wall-row';
-    row.innerHTML=`
+    row.className = 'wall-row';
+    row.innerHTML = `
       <div class="wall-amount" style="color:${w.color}">${w.amount}万</div>
       <div class="wall-info">
         <div class="wall-name">${w.label}</div>
         <div class="wall-desc">${w.desc}</div>
-        <div class="wall-bar-wrap"><div class="wall-bar-fill" style="width:${pct}%;background:${w.color};opacity:0.5;"></div></div>
+        <div class="wall-bar-wrap">
+          <div class="wall-bar-fill" style="width:${pct}%;background:${w.color};opacity:0.5;"></div>
+        </div>
       </div>
       <div class="wall-badge ${cls}">${badge}</div>
       <div class="wall-margin">${margin}</div>`;
     list.appendChild(row);
   });
 
-  document.getElementById('inside-amount').textContent=fmt(inside.take);
-  document.getElementById('inside-note').textContent=`年収${safeLimit}万に抑えた場合`;
-  document.getElementById('current-amount').textContent=fmt(current.take);
-  document.getElementById('current-note').textContent=`社保${current.needSocial?fmt(current.socialIns):'0万'} / 所税${fmt(current.incomeTax)}`;
+  const dedSection = document.getElementById('deduction-section');
+  const dedRows    = document.getElementById('deduction-rows');
 
-  const diff2 = current.take-inside.take;
-  document.getElementById('box-inside').className='compare-box';
-  document.getElementById('box-current').className='compare-box';
-  const diffEl = document.getElementById('compare-diff');
-  if(diff2>5){
-    document.getElementById('box-current').classList.add('better');
-    diffEl.innerHTML=`年収を増やすことで手取りが <span class="diff-up">＋${fmt(diff2)}</span> 増えます`;
-  } else if(diff2<-5){
-    document.getElementById('box-inside').classList.add('better');
-    document.getElementById('box-current').classList.add('worse');
-    diffEl.innerHTML=`年収が多いのに手取りは <span class="diff-down">${fmt(Math.abs(diff2))} 少なくなります</span>（損する年収帯）`;
+  if (!isSpouse) {
+    dedSection.style.display = 'none';
   } else {
-    diffEl.textContent='手取りはほぼ同額です。';
+    dedSection.style.display = 'block';
+    const { deductionType, deductionAmount, spouseIncomeClass } =
+      calcSpouseDeduction(income, spouseIncome, isOld);
+    const taxSaving = calcSpouseTaxSaving(spouseIncome, deductionAmount);
+
+    const typeLabel = {
+      control: '配偶者控除（あなたの年収123万円以下の目安）',
+      special: '配偶者特別控除（あなたの年収が123万円超〜の範囲）',
+      none:    '控除なし',
+    }[deductionType];
+
+    const clsLabel = {
+      A: `扶養する側の年収〜1,095万円（満額適用）`,
+      B: `扶養する側の年収1,095〜1,145万円（減額①）`,
+      C: `扶養する側の年収1,145〜1,195万円（減額②）`,
+      over1195: `扶養する側の給与収入1,195万円超（控除なし）`,
+    }[spouseIncomeClass] || '';
+
+    dedRows.innerHTML = `
+      <div class="ded-row">
+        <div class="ded-label">
+          <strong>控除の種類</strong>${typeLabel}
+        </div>
+        <div class="ded-amount ${deductionAmount > 0 ? 'active' : 'zero'}">
+          ${deductionAmount > 0 ? deductionAmount + '万円' : '0円'}
+        </div>
+      </div>
+      <div class="ded-row">
+        <div class="ded-label">
+          <strong>扶養する側の所得区分</strong>${clsLabel}
+        </div>
+        <div class="ded-amount" style="font-size:12px;color:var(--muted)">参考</div>
+      </div>
+      <div class="ded-row">
+        <div class="ded-label">
+          <strong>扶養する側の節税額（推計）</strong>
+          控除によって所得税が軽減される金額（概算）
+        </div>
+        <div class="ded-amount ${taxSaving > 0 ? 'active' : 'zero'}">
+          ${taxSaving > 0 ? '▲' + fmt(taxSaving) : '0円'}
+        </div>
+      </div>`;
   }
 
-  const advices=[];
-  if(income<106) advices.push('全ての主要ラインを下回っています。<strong>123万円未満なら所得税・配偶者控除の影響はありません。</strong>');
-  if(isBig&&hours>=20&&income>=106&&income<130) advices.push('<strong>106万円の社会保険の壁</strong>を超えています。手取りを戻すには130万円以上に増やすか、106万円未満に抑えることを検討してください。');
-  if(income>=123&&income<160&&spouse!=='none'&&spouse!=='over') advices.push('<strong>配偶者特別控除</strong>（最大38万円）が年収160万円まで段階的に適用されます。配偶者側の税負担への影響も確認しましょう。');
-  if(income>=130&&income<180) advices.push('自身で健康保険・国民年金への加入が必要です。<strong>将来の年金増加・各種手当のメリット</strong>もあります。');
-  if(income>=160) advices.push('<strong>年収200万円以上を目指す</strong>か、160万円未満に抑えるか明確に判断しましょう。');
-  if(advices.length===0) advices.push('現在の状況で特に大きな損失はありません。年末に向けて収入が増える場合は再度シミュレーションをお勧めします。');
-  advices.push('この計算は概算です。正確な金額は年末調整・確定申告時に確認してください。');
+  const insideTotal  = inside.total;
+  const currentTotal = current.total;
+  const diff         = currentTotal - insideTotal;
 
-  const advEl=document.getElementById('advice-list');
-  advEl.innerHTML='';
-  advices.forEach((a,i)=>{
-    const d=document.createElement('div');
-    d.className='advice-item';
-    d.innerHTML=`<span class="advice-num">0${i+1}</span><span>${a}</span>`;
+  document.getElementById('hh-inside-amount').textContent = fmtI(insideTotal);
+  document.getElementById('hh-inside-note').textContent   =
+    `あなた${fmtI(inside.partTake)} + 扶養する側${fmtI(inside.spouseTake)}`;
+
+  document.getElementById('hh-current-amount').textContent = fmtI(currentTotal);
+  document.getElementById('hh-current-note').textContent   =
+    `あなた${fmtI(current.partTake)} + 扶養する側${fmtI(current.spouseTake)}`;
+
+  document.getElementById('hh-inside').className  = 'hh-box';
+  document.getElementById('hh-current').className = 'hh-box';
+
+  const diffEl = document.getElementById('hh-diff');
+  if (diff > 5) {
+    document.getElementById('hh-current').classList.add('highlight');
+    diffEl.innerHTML = `現在の年収の方が世帯手取りが <strong style="color:var(--green)">＋${fmtI(diff)}</strong> 多くなります`;
+  } else if (diff < -5) {
+    document.getElementById('hh-inside').classList.add('highlight');
+    document.getElementById('hh-current').classList.add('highlight-warn');
+    diffEl.innerHTML = `年収が増えているのに世帯手取りは <strong style="color:var(--red)">${fmtI(Math.abs(diff))} 少なくなります</strong>（いわゆる“逆転”が起きやすい帯）`;
+  } else {
+    diffEl.textContent = '世帯手取りはほぼ同額です。';
+  }
+
+  const advices = [];
+  const p = current.partDetail;
+  const shortTimeEligible = isBig && hours >= 20 && (income/12) >= 8.8 && !isStudent && over2months;
+
+  if (!needSocialInsurance(income, isBig, hours, isStudent, over2months)) {
+    advices.push('現時点では社会保険加入が発生しにくい条件です（ただし保険者・勤務実態で変わります）。');
+  } else {
+    if (shortTimeEligible) {
+      advices.push(`<strong>短時間労働者の社会保険加入</strong>に該当する可能性があります。社会保険料（概算：年${fmt(p.socialIns)}）が発生している前提で計算しました。`);
+    } else if (income >= 130) {
+      advices.push(`<strong>130万円の目安</strong>を超えています。健康保険の扶養から外れる可能性が高く、保険料負担が発生しやすい帯です（保険者基準で判定）。`);
+    } else {
+      advices.push('社会保険の判定は細目が多いです。勤務先の人事・保険者へ条件確認をおすすめします。');
+    }
+  }
+
+  if (income < 123) advices.push('所得税は発生しにくい範囲です（控除や保険料で変動）。');
+  else advices.push('所得税は発生する可能性があります（控除・保険料の状況で変動）。');
+
+  if (isSpouse) {
+    const { deductionAmount, deductionType } = calcSpouseDeduction(income, spouseIncome, isOld);
+    const taxSaving = calcSpouseTaxSaving(spouseIncome, deductionAmount);
+    if (deductionAmount > 0) {
+      advices.push(`扶養する側では<strong>${deductionType === 'control' ? '配偶者控除' : '配偶者特別控除'}（${deductionAmount}万円）</strong>が適用される可能性があり、所得税が推計約${fmt(taxSaving)}軽減されています。`);
+    } else {
+      advices.push('扶養する側の年収やあなたの年収により、配偶者控除（特別控除）が適用されない可能性があります。');
+    }
+  }
+
+  advices.push('この計算は概算です。月給・賞与・控除（生命保険料控除など）・扶養人数・自治体差によって結果は変わります。');
+
+  const advEl = document.getElementById('advice-list');
+  advEl.innerHTML = '';
+  advices.forEach((a, i) => {
+    const d = document.createElement('div');
+    d.className = 'advice-item';
+    d.innerHTML = `<span class="advice-num">0${i + 1}</span><span>${a}</span>`;
     advEl.appendChild(d);
   });
 }
-function resetForm(){
-  document.getElementById('result').style.display='none';
-  window.scrollTo({top:0,behavior:'smooth'});
+
+function resetForm() {
+  document.getElementById('result').style.display = 'none';
+  window.scrollTo({ top:0, behavior:'smooth' });
 }
+
+// 初期化
+syncSpouseIncomeBand();
+syncSpouseIncomeMode();
+
 </script>
 </body>
 </html>
