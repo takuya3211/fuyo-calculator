@@ -4,97 +4,75 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>プライバシーポリシー | kurashicalc</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;700;900&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
-<style>
-  :root {
-    --bg: #0d0d0f; --surface: #141418; --card: #1a1a20;
-    --border: #2a2a35; --accent: #e8c547; --text: #f0ede8; --muted: #888;
-  }
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-  body { background: var(--bg); color: var(--text); font-family: 'Noto Serif JP', serif; line-height: 1.9; }
-  nav {
-    border-bottom: 1px solid var(--border);
-    padding: 16px 40px;
-    display: flex; align-items: center; justify-content: space-between;
-  }
-  .logo { font-family: 'DM Mono', monospace; font-size: 18px; color: var(--accent); text-decoration: none; font-weight: 500; }
-  .nav-links { display: flex; gap: 24px; }
-  .nav-links a { color: var(--muted); text-decoration: none; font-size: 13px; font-family: 'DM Mono', monospace; transition: color 0.2s; }
-  .nav-links a:hover { color: var(--text); }
-  .container { max-width: 760px; margin: 0 auto; padding: 60px 24px 80px; }
-  .page-label { font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 0.15em; color: var(--accent); margin-bottom: 16px; }
-  h1 { font-size: 32px; font-weight: 900; margin-bottom: 8px; }
-  .updated { font-family: 'DM Mono', monospace; font-size: 12px; color: var(--muted); margin-bottom: 48px; }
-  h2 { font-size: 16px; font-weight: 700; margin: 40px 0 12px; padding-left: 12px; border-left: 3px solid var(--accent); }
-  p { font-size: 14px; color: #ccc; margin-bottom: 12px; }
-  ul { padding-left: 20px; margin-bottom: 12px; }
-  ul li { font-size: 14px; color: #ccc; margin-bottom: 6px; }
-  a { color: var(--accent); }
-  footer { border-top: 1px solid var(--border); padding: 24px 40px; text-align: center; font-family: 'DM Mono', monospace; font-size: 12px; color: var(--muted); }
-</style>
+<link rel="stylesheet" href="style.css">
 </head>
 <body>
-<nav>
+<nav class="site-nav">
   <a href="/" class="logo">kurashicalc</a>
   <div class="nav-links">
-    <a href="/">ツール</a>
-    <a href="/privacy.html">プライバシーポリシー</a>
+    <a href="/" class="hide-sp">ツール</a>
+    <a href="/privacy.html" class="hide-sp">プライバシーポリシー</a>
     <a href="/contact.html">お問い合わせ</a>
   </div>
 </nav>
 
-<div class="container">
+<div class="container-narrow">
   <div class="page-label">LEGAL</div>
-  <h1>プライバシーポリシー</h1>
-  <div class="updated">最終更新日：2025年2月24日</div>
+  <h1 class="page-title">プライバシーポリシー</h1>
+  <p class="page-updated">最終更新日：2025年2月24日</p>
 
-  <p>kurashicalc（以下「当サイト」）は、ユーザーのプライバシーを尊重し、個人情報の保護に努めます。本ポリシーは、当サイトにおける情報の収集・利用方針を説明するものです。</p>
+  <div class="prose">
+    <p>kurashicalc（以下「当サイト」）は、ユーザーのプライバシーを尊重し、個人情報の保護に努めます。本ポリシーは、当サイトにおける情報の収集・利用方針を説明するものです。</p>
 
-  <h2>1. 収集する情報について</h2>
-  <p>当サイトの計算ツールに入力された年収・勤務時間等の情報は、お使いのブラウザ上でのみ処理されます。これらのデータは当サイトのサーバーに送信・保存されることはありません。</p>
-  <p>当サイトでは、以下の方法により情報を収集することがあります。</p>
-  <ul>
-    <li>アクセスログ（IPアドレス、ブラウザ種別、参照元URL、アクセス日時）</li>
-    <li>Cookieおよびこれに類する技術</li>
-    <li>Google Analytics による匿名のアクセス解析データ</li>
-    <li>Google AdSense による広告配信に関連するデータ</li>
-  </ul>
+    <h2>1. 収集する情報について</h2>
+    <p>当サイトの計算ツールに入力された年収・勤務時間等の情報は、お使いのブラウザ上でのみ処理されます。これらのデータは当サイトのサーバーに送信・保存されることはありません。</p>
+    <p>当サイトでは、以下の方法により情報を収集することがあります。</p>
+    <ul>
+      <li>アクセスログ（IPアドレス、ブラウザ種別、参照元URL、アクセス日時）</li>
+      <li>Cookieおよびこれに類する技術</li>
+      <li>Google Analytics による匿名のアクセス解析データ</li>
+      <li>Google AdSense による広告配信に関連するデータ</li>
+    </ul>
 
-  <h2>2. Cookieについて</h2>
-  <p>当サイトはCookieを使用しています。Cookieとは、ウェブサイトがお使いのブラウザに保存する小さなテキストファイルです。当サイトでは以下の目的でCookieを利用しています。</p>
-  <ul>
-    <li>サイトの利用状況の分析（Google Analytics）</li>
-    <li>ユーザーに適した広告の配信（Google AdSense）</li>
-  </ul>
-  <p>ブラウザの設定からCookieを無効にすることが可能ですが、一部機能が正常に動作しなくなる場合があります。</p>
+    <h2>2. Cookieについて</h2>
+    <p>当サイトはCookieを使用しています。Cookieとは、ウェブサイトがお使いのブラウザに保存する小さなテキストファイルです。当サイトでは以下の目的でCookieを利用しています。</p>
+    <ul>
+      <li>サイトの利用状況の分析（Google Analytics）</li>
+      <li>ユーザーに適した広告の配信（Google AdSense）</li>
+    </ul>
+    <p>ブラウザの設定からCookieを無効にすることが可能ですが、一部機能が正常に動作しなくなる場合があります。</p>
 
-  <h2>3. Google Analytics について</h2>
-  <p>当サイトはアクセス解析のためにGoogle Analytics を使用しています。Google Analytics はCookieを使用してデータを収集しますが、個人を特定する情報は含まれません。収集されたデータはGoogleのプライバシーポリシーに基づいて管理されます。</p>
-  <p>Google Analytics のデータ収集を無効にしたい場合は、<a href="https://tools.google.com/dlpage/gaoptout" target="_blank" rel="noopener">Google Analytics オプトアウトアドオン</a>をご利用ください。</p>
+    <h2>3. Google Analytics について</h2>
+    <p>当サイトはアクセス解析のためにGoogle Analytics を使用しています。Google Analytics はCookieを使用してデータを収集しますが、個人を特定する情報は含まれません。収集されたデータはGoogleのプライバシーポリシーに基づいて管理されます。</p>
+    <p>Google Analytics のデータ収集を無効にしたい場合は、<a href="https://tools.google.com/dlpage/gaoptout" target="_blank" rel="noopener">Google Analytics オプトアウトアドオン</a>をご利用ください。</p>
 
-  <h2>4. Google AdSense について</h2>
-  <p>当サイトはGoogle AdSense を使用して広告を掲載しています。Google AdSense は、ユーザーの興味に基づいた広告を表示するためにCookieを使用する場合があります。広告のパーソナライズ設定は<a href="https://adssettings.google.com/" target="_blank" rel="noopener">広告設定ページ</a>から変更できます。</p>
+    <h2>4. Google AdSense について</h2>
+    <p>当サイトはGoogle AdSense を使用して広告を掲載しています。Google AdSense は、ユーザーの興味に基づいた広告を表示するためにCookieを使用する場合があります。広告のパーソナライズ設定は<a href="https://adssettings.google.com/" target="_blank" rel="noopener">広告設定ページ</a>から変更できます。</p>
 
-  <h2>5. 第三者への情報提供</h2>
-  <p>当サイトは、以下の場合を除き、収集した情報を第三者に提供しません。</p>
-  <ul>
-    <li>法令に基づく開示が必要な場合</li>
-    <li>人の生命・財産の保護のために必要な場合</li>
-    <li>ユーザー本人の同意がある場合</li>
-  </ul>
+    <h2>5. 第三者への情報提供</h2>
+    <p>当サイトは、以下の場合を除き、収集した情報を第三者に提供しません。</p>
+    <ul>
+      <li>法令に基づく開示が必要な場合</li>
+      <li>人の生命・財産の保護のために必要な場合</li>
+      <li>ユーザー本人の同意がある場合</li>
+    </ul>
 
-  <h2>6. 免責事項</h2>
-  <p>当サイトのツールが提供する計算結果はすべて概算であり、正確性を保証するものではありません。実際の税額・手取り額は個人の状況により異なります。重要な判断の前には税理士・社会保険労務士等の専門家にご相談ください。</p>
-  <p>当サイトのコンテンツに基づいて行った判断・行動によって生じたいかなる損害についても、当サイトは責任を負いません。</p>
+    <h2>6. 免責事項</h2>
+    <p>当サイトのツールが提供する計算結果はすべて概算であり、正確性を保証するものではありません。実際の税額・手取り額は個人の状況により異なります。重要な判断の前には税理士・社会保険労務士等の専門家にご相談ください。</p>
+    <p>当サイトのコンテンツに基づいて行った判断・行動によって生じたいかなる損害についても、当サイトは責任を負いません。</p>
 
-  <h2>7. プライバシーポリシーの変更</h2>
-  <p>当サイトは、必要に応じて本ポリシーを変更することがあります。変更後のポリシーは本ページに掲載した時点で効力を生じます。</p>
+    <h2>7. プライバシーポリシーの変更</h2>
+    <p>当サイトは、必要に応じて本ポリシーを変更することがあります。変更後のポリシーは本ページに掲載した時点で効力を生じます。</p>
 
-  <h2>8. お問い合わせ</h2>
-  <p>本ポリシーに関するお問い合わせは、<a href="/contact.html">お問い合わせページ</a>よりご連絡ください。</p>
+    <h2>8. お問い合わせ</h2>
+    <p>本ポリシーに関するお問い合わせは、<a href="/contact.html">お問い合わせページ</a>よりご連絡ください。</p>
+  </div>
 </div>
 
-<footer>© 2025 kurashicalc — 暮らしの計算ツール</footer>
+<footer class="site-footer">
+  © 2025 kurashicalc
+  <a href="/privacy.html">プライバシーポリシー</a>
+  <a href="/contact.html">お問い合わせ</a>
+</footer>
 </body>
 </html>
