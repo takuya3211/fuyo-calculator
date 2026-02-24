@@ -155,34 +155,27 @@
       <div class="field">
         <label>
           <strong>扶養する側（夫など）の年収</strong>
-          <span class="tip" data-tip="配偶者控除・配偶者特別控除の額は、扶養する側の収入（給与）区分によって変わります。1,195万円超の場合は控除がゼロになります。">?</span>
+          <span class="tip" data-tip="世帯手取り（概算）を計算するため、できるだけ実際の給与年収を入力してください。配偶者控除・配偶者特別控除の減額区分（1,095万/1,145万/1,195万）は自動判定されます。">?</span>
         </label>
 
         <div class="input-wrap">
-          <select id="spouse-income-mode" onchange="syncSpouseIncomeMode()">
-            <option value="band" selected>区分で選ぶ（かんたん）</option>
-            <option value="custom">金額を入力する（正確）</option>
-          </select>
-        </div>
-
-        <div class="input-wrap" id="spouse-income-band-wrap" style="margin-top:10px;">
-          <select id="spouse-income-band" onchange="syncSpouseIncomeBand()">
-            <option value="1000" selected>〜1,095万円（控除：満額）</option>
-            <option value="1120">1,095〜1,145万円（控除：減額①）</option>
-            <option value="1170">1,145〜1,195万円（控除：減額②）</option>
-            <option value="1300">1,195万円超（控除なし）</option>
-          </select>
-        </div>
-
-        <div class="input-wrap" id="spouse-income-custom-wrap" style="margin-top:10px; display:none;">
-          <input type="number" id="spouse-income-input" value="500" min="0" max="9999">
+          <input type="number" id="spouse-income-input" value="500" min="0" max="9999" oninput="syncSpouseClassAuto()">
           <span class="input-unit">万円</span>
         </div>
 
-        <!-- 計算用の値（区分選択時はこの値を使用） -->
-        <input type="hidden" id="spouse-income-hidden" value="1000">
+        <div class="input-wrap" style="margin-top:10px;">
+          <select id="spouse-income-class" onchange="onSpouseClassChanged()">
+            <option value="auto" selected>控除区分：自動（年収から判定）</option>
+            <option value="A">控除区分：〜1,095万円（A）</option>
+            <option value="B">控除区分：1,095〜1,145万円（B）</option>
+            <option value="C">控除区分：1,145〜1,195万円（C）</option>
+            <option value="over1195">控除区分：1,195万円超（控除なし）</option>
+          </select>
+        </div>
 
-        <span class="field-hint">「区分で選ぶ」は配偶者控除の区分判定を簡単にするための目安値で計算します。世帯手取りを正確に見たい場合は「金額を入力する」を選んでください。</span>
+        <input type="hidden" id="spouse-income-class-auto" value="A">
+
+        <span class="field-hint">※「控除区分」は配偶者控除（特別控除）の減額判定にのみ使用します。世帯手取りの計算は上の年収入力を使います。</span>
       </div>
 
       <div class="field">
@@ -234,7 +227,7 @@
             <option value="no">いいえ（短期）</option>
           </select>
         </div>
-        <span class="field-hint">不明な場合は「はい」でOK（安全側）</span>
+        <span class="field-hint">不明な場合は「はい」でOK（安全側）<br>※月8.8万円の賃金要件は2026年中〜2028年に撤廃予定（2025年6月成立・施行日未定）</span>
       </div>
 
       <div class="field">
@@ -275,6 +268,15 @@
       <div class="verdict-desc" id="verdict-desc"></div>
     </div>
 
+
+    <div class="card" style="animation:none;">
+      <div class="section-eyebrow">あなたへのアドバイス</div>
+      <div class="advice-list" id="advice-list"></div>
+    </div>
+
+    
+
+
     <div class="walls-card">
       <div class="walls-card-head">WALL CHECK — 各ラインとの距離（目安）</div>
       <div id="walls-list"></div>
@@ -285,33 +287,35 @@
       <div id="deduction-rows"></div>
     </div>
 
+    <!-- あなたの手取り内訳 -->
     <div class="household-card">
-      <div class="household-title">世帯手取り比較：扶養内に抑えた場合 vs 現在の年収</div>
-      <div class="hh-grid">
-        <div class="hh-box" id="hh-inside">
-          <div class="hh-label">扶養内に抑えた場合（目安）</div>
-          <div class="hh-amount" id="hh-inside-amount">—</div>
-          <div class="hh-sub" id="hh-inside-note"></div>
+      <div class="household-title">あなたの手取り内訳（現在の年収）</div>
+      <div class="hh-grid" id="take-home-grid">
+        <div class="hh-box">
+          <div class="hh-label">あなたの手取り</div>
+          <div class="hh-amount" id="th-take">—</div>
+          <div class="hh-sub" id="th-take-sub"></div>
         </div>
-        <div class="hh-box" id="hh-current">
-          <div class="hh-label">現在の年収のまま（目安）</div>
-          <div class="hh-amount" id="hh-current-amount">—</div>
-          <div class="hh-sub" id="hh-current-note"></div>
+        <div class="hh-box" id="th-benefit-box" style="display:none">
+          <div class="hh-label">配偶者控除の節税額（夫側）</div>
+          <div class="hh-amount" id="th-benefit">—</div>
+          <div class="hh-sub">夫の所得税が軽減される分（推計）</div>
         </div>
       </div>
-      <div class="hh-diff" id="hh-diff"></div>
+      <div id="th-breakdown" class="hh-diff" style="font-size:13px;line-height:1.9;text-align:left;padding:14px 20px;"></div>
     </div>
 
-    <div class="card" style="animation:none;">
-      <div class="section-eyebrow">あなたへのアドバイス</div>
-      <div class="advice-list" id="advice-list"></div>
+    <!-- 年収別手取り比較テーブル -->
+    <div class="deduction-bar-card">
+      <div class="deduction-bar-head">INCOME SIMULATION — 年収別の手取り比較</div>
+      <div style="padding:14px 24px 6px;font-size:12px;color:var(--muted);">現在の年収±の範囲でシミュレーション。<strong style="color:var(--text)">太字</strong>が現在の年収。</div>
+      <div id="income-table" style="overflow-x:auto;"></div>
     </div>
-
-    <span class="reset-link" onclick="resetForm()">← 入力をやり直す</span>
+<span class="reset-link" onclick="resetForm()">← 入力をやり直す</span>
 
     <div class="footer-note">
       ※本ツールの計算結果は概算です。実際の税額・手取り額は自治体・勤務先・各種控除・扶養家族数・月額賃金の実態などにより異なります。重要な判断の前には税理士・社会保険労務士等の専門家にご相談ください。<br>
-      ※本ページは「2025年（令和7年分）税制改正」を前提にしています。将来改正（例：短時間労働者の賃金要件の見直し等）で判定条件が変わる可能性があります。<br>
+      ※本ページは「2025年（令和7年分）税制改正」を前提にしています。<strong>社会保険の今後の改正：①月額賃金8.8万円要件（106万円の壁）は2026年中〜2028年6月に撤廃予定、②企業規模要件（51人以上）は2027年10月〜2035年10月に段階的撤廃（年金制度改正法・2025年6月成立）。</strong> 施行日は政令で確定次第変わります。<br>
       ※所得税：給与所得控除（最低65万円）・基礎控除（合計所得により段階）を反映。住民税：基礎控除43万円・所得割10%・均等割＋森林環境税（合計5,500円相当）を「課税ベースがある場合」に計上（概算）。社会保険料率：14.15%を便宜上使用（実際は健保組合・都道府県・年度で変動）。
     </div>
   </div>
@@ -326,7 +330,7 @@
 <script>
 const WALLS = [
   { amount:123, label:'所得税の目安（給与収入）', desc:'給与所得控除＋基礎控除で、所得税が0になりやすい目安（個別事情で変動）', color:'#a0720a' },
-  { amount:106, label:'社会保険の目安（51人以上）', desc:'週20h以上・月8.8万円以上・学生除外などで加入対象（入力条件で判定）', color:'#c07a20', bigOnly:true },
+  { amount:106, label:'社会保険の目安（51人以上・現行）', desc:'現行：週20h以上・月8.8万円以上・51人以上・学生除外。月8.8万円の賃金要件は2026年中〜2028年に廃止予定。企業規模要件も2027年〜2035年に段階的撤廃（年金制度改正法・2025年6月成立）', color:'#c07a20', bigOnly:true },
   { amount:130, label:'社会保険の目安（扶養から外れる）', desc:'健康保険の扶養（被扶養者）から外れる目安。実務は保険者の基準により判定', color:'#c0392b' },
   { amount:160, label:'配偶者特別控除（満額）', desc:'ここまでは夫側で38万円の控除が満額適用（要件あり）。超えると段階的に減額', color:'#6d28d9' },
 ];
@@ -364,11 +368,11 @@ function incomeTaxFromTaxable(t) {
   return 1320.4  + (t - 4000) * 0.45;
 }
 
-function residentTaxApprox(income, socialIns, includeKintoWari=true) {
+function residentTaxApprox(income, socialIns, includeKintoWari=true, spouseDed=0) {
   const ded = empDed(income);
-  const base = Math.max(0, income - ded - 43 - socialIns);
+  const base = Math.max(0, income - ded - 43 - socialIns - spouseDed); // 住民税の課税ベース（概算）
   if (base <= 0) return 0;
-  const kinto = includeKintoWari ? 0.55 : 0;
+  const kinto = includeKintoWari ? 0.55 : 0; // 均等割＋森林環境税（概算）
   return base * 0.10 + kinto;
 }
 
@@ -394,8 +398,11 @@ function calcPartTake(income, isBig, hours, isStudent, over2months) {
   return { take, socialIns, incomeTax, residentTax, needSocial };
 }
 
-function calcSpouseDeduction(partIncome, spouseIncome, isOld) {
+function calcSpouseDeduction(partIncome, spouseIncome, isOld, spouseClassOverride=null) {
   let cls;
+  if (spouseClassOverride && spouseClassOverride !== 'auto') {
+    cls = spouseClassOverride;
+  } else 
   if (spouseIncome > 1195) {
     return { deductionType: 'none', deductionAmount: 0, spouseIncomeClass: 'over1195' };
   } else if (spouseIncome > 1145) cls = 'C';
@@ -432,6 +439,53 @@ function calcSpouseDeduction(partIncome, spouseIncome, isOld) {
   return { deductionType: 'none', deductionAmount: 0, spouseIncomeClass: cls };
 }
 
+// ============================================================
+// 住民税：配偶者控除／配偶者特別控除（概算）
+// ・配偶者控除：一般 33万円、老人控除対象配偶者 38万円（扶養者の所得区分で段階的に減額）
+// ・配偶者特別控除：最大 33万円（段階的に減額）
+// ※ 表は自治体等で公開されている一般的な一覧表に沿った近似（住民税用テーブル）
+// ============================================================
+function calcSpouseDeductionResident(partIncome, spouseIncome, isOld) {
+  let cls;
+  if (spouseIncome > 1195) {
+    return { deductionType: 'none', deductionAmount: 0, spouseIncomeClass: 'over1195' };
+  } else if (spouseIncome > 1145) cls = 'C';
+  else if   (spouseIncome > 1095) cls = 'B';
+  else                             cls = 'A';
+
+  const partNet = Math.max(0, partIncome - empDed(partIncome)); // 配偶者（パート側）の合計所得（給与所得）
+
+  // 配偶者控除（合計所得58万円以下）
+  if (partNet <= 58) {
+    const base = isOld ? { A:38, B:26, C:13 } : { A:33, B:22, C:11 };
+    return { deductionType: 'control', deductionAmount: base[cls], spouseIncomeClass: cls };
+  }
+
+  // 配偶者特別控除（合計所得58万超〜133万以下）
+  if (partNet > 133) {
+    return { deductionType: 'none', deductionAmount: 0, spouseIncomeClass: cls };
+  }
+
+  // 住民税の配偶者特別控除（最大33万円）テーブル（概算）
+  const table = [
+    { max: 100, A:33, B:22, C:11 },
+    { max: 105, A:31, B:21, C:11 },
+    { max: 110, A:26, B:18, C: 9 },
+    { max: 115, A:21, B:14, C: 7 },
+    { max: 120, A:16, B:11, C: 6 },
+    { max: 125, A:11, B: 8, C: 4 },
+    { max: 130, A: 6, B: 4, C: 2 },
+    { max: 133, A: 3, B: 2, C: 1 },
+  ];
+  for (const row of table) {
+    if (partNet <= row.max) {
+      return { deductionType: 'special', deductionAmount: row[cls], spouseIncomeClass: cls };
+    }
+  }
+  return { deductionType: 'none', deductionAmount: 0, spouseIncomeClass: cls };
+}
+
+
 function calcSpouseTaxSaving(spouseIncome, deductionAmount) {
   if (deductionAmount === 0) return 0;
   const ded    = empDed(spouseIncome);
@@ -452,13 +506,14 @@ function calcHouseholdTake(partIncome, spouseIncome, isBig, hours, isOld, isSpou
   let spouseDeductionAmount = 0;
 
   if (isSpouse) {
-    const { deductionAmount } = calcSpouseDeduction(partIncome, spouseIncome, isOld);
+    const { deductionAmount } = calcSpouseDeduction(partIncome, spouseIncome, isOld, getSpouseClass(spouseIncome));
     spouseDeductionAmount = deductionAmount;
   }
 
   const spouseTaxable  = Math.max(0, spouseIncome - spouseDed - spouseBasic - spouseSocial - spouseDeductionAmount);
   const spouseIT       = incomeTaxFromTaxable(spouseTaxable);
-  const spouseRT       = residentTaxApprox(spouseIncome, spouseSocial, true);
+  const spouseResidentDed = isSpouse ? calcSpouseDeductionResident(partIncome, spouseIncome, isOld, getSpouseClass(spouseIncome)).deductionAmount : 0;
+  const spouseRT       = residentTaxApprox(spouseIncome, spouseSocial, true, spouseResidentDed);
   const spouseTake     = spouseIncome - spouseSocial - spouseIT - spouseRT;
 
   return {
@@ -481,38 +536,36 @@ function syncIncome(val, fromInput) {
 }
 
 
-function getSpouseIncome() {
-  const mode = document.getElementById('spouse-income-mode')?.value || 'band';
-  if (mode === 'custom') {
-    return parseFloat(document.getElementById('spouse-income-input').value) || 0;
-  }
-  return parseFloat(document.getElementById('spouse-income-hidden').value) || 0;
+
+
+function spouseIncomeToClass(spouseIncome) {
+  if (spouseIncome > 1195) return 'over1195';
+  if (spouseIncome > 1145) return 'C';
+  if (spouseIncome > 1095) return 'B';
+  return 'A';
 }
 
-function syncSpouseIncomeMode() {
-  const mode = document.getElementById('spouse-income-mode').value;
-  const bandWrap = document.getElementById('spouse-income-band-wrap');
-  const customWrap = document.getElementById('spouse-income-custom-wrap');
-  if (mode === 'custom') {
-    bandWrap.style.display = 'none';
-    customWrap.style.display = 'block';
-  } else {
-    bandWrap.style.display = 'block';
-    customWrap.style.display = 'none';
-    syncSpouseIncomeBand();
-  }
+function getSpouseClass(spouseIncome) {
+  const sel = document.getElementById('spouse-income-class')?.value || 'auto';
+  if (sel === 'auto') return spouseIncomeToClass(spouseIncome);
+  return sel;
 }
 
-function syncSpouseIncomeBand() {
-  const v = document.getElementById('spouse-income-band').value;
-  document.getElementById('spouse-income-hidden').value = v;
+function syncSpouseClassAuto() {
+  const spouseIncome = parseFloat(document.getElementById('spouse-income-input').value) || 0;
+  const cls = spouseIncomeToClass(spouseIncome);
+  const hidden = document.getElementById('spouse-income-class-auto');
+  if (hidden) hidden.value = cls;
+}
+
+function onSpouseClassChanged() {
+  // 今は特に処理なし（将来表示を変えたい場合のフック）
 }
 
 function calculate() {
   const income       = parseFloat(document.getElementById('income-input').value)   || 0;
-  const spouseIncome = getSpouseIncome();
-
-  const companySel   = document.getElementById('company-size').value;
+  const spouseIncome = parseFloat(document.getElementById('spouse-income-input').value) || 0;
+const companySel   = document.getElementById('company-size').value;
   const isBig        = (companySel === 'large') || (companySel === 'unknown');
 
   const hours        = parseFloat(document.getElementById('weekly-hours').value)   || 0;
@@ -523,11 +576,7 @@ function calculate() {
   const isStudent    = document.getElementById('is-student').value === 'yes';
   const over2months  = document.getElementById('over-2months').value === 'yes';
 
-  const shortTimeWouldApply = isBig && hours >= 20 && !isStudent && over2months;
-  const safeLimit = shortTimeWouldApply ? 105 : 129;
-
   const current = calcHouseholdTake(income, spouseIncome, isBig, hours, isOld, isSpouse, isStudent, over2months);
-  const inside  = calcHouseholdTake(safeLimit, spouseIncome, isBig, hours, isOld, isSpouse, isStudent, over2months);
 
   const result = document.getElementById('result');
   result.style.display = 'block';
@@ -607,7 +656,7 @@ function calculate() {
   } else {
     dedSection.style.display = 'block';
     const { deductionType, deductionAmount, spouseIncomeClass } =
-      calcSpouseDeduction(income, spouseIncome, isOld);
+      calcSpouseDeduction(income, spouseIncome, isOld, getSpouseClass(spouseIncome));
     const taxSaving = calcSpouseTaxSaving(spouseIncome, deductionAmount);
 
     const typeLabel = {
@@ -649,35 +698,91 @@ function calculate() {
       </div>`;
   }
 
-  const insideTotal  = inside.total;
-  const currentTotal = current.total;
-  const diff         = currentTotal - insideTotal;
+  // ── あなたの手取り内訳 ──
+  const p = current.partDetail;
+  const taxSavingCurrent = isSpouse
+    ? calcSpouseTaxSaving(spouseIncome, calcSpouseDeduction(income, spouseIncome, isOld, getSpouseClass(spouseIncome)).deductionAmount)
+    : 0;
 
-  document.getElementById('hh-inside-amount').textContent = fmtI(insideTotal);
-  document.getElementById('hh-inside-note').textContent   =
-    `あなた${fmtI(inside.partTake)} + 扶養する側${fmtI(inside.spouseTake)}`;
+  document.getElementById('th-take').textContent = fmtI(current.partTake);
+  document.getElementById('th-take-sub').textContent = `年収${fmtI(income)}から税・社保を引いた額`;
 
-  document.getElementById('hh-current-amount').textContent = fmtI(currentTotal);
-  document.getElementById('hh-current-note').textContent   =
-    `あなた${fmtI(current.partTake)} + 扶養する側${fmtI(current.spouseTake)}`;
-
-  document.getElementById('hh-inside').className  = 'hh-box';
-  document.getElementById('hh-current').className = 'hh-box';
-
-  const diffEl = document.getElementById('hh-diff');
-  if (diff > 5) {
-    document.getElementById('hh-current').classList.add('highlight');
-    diffEl.innerHTML = `現在の年収の方が世帯手取りが <strong style="color:var(--green)">＋${fmtI(diff)}</strong> 多くなります`;
-  } else if (diff < -5) {
-    document.getElementById('hh-inside').classList.add('highlight');
-    document.getElementById('hh-current').classList.add('highlight-warn');
-    diffEl.innerHTML = `年収が増えているのに世帯手取りは <strong style="color:var(--red)">${fmtI(Math.abs(diff))} 少なくなります</strong>（いわゆる“逆転”が起きやすい帯）`;
+  const benefitBox = document.getElementById('th-benefit-box');
+  if (isSpouse && taxSavingCurrent > 0) {
+    benefitBox.style.display = 'block';
+    document.getElementById('th-benefit').textContent = '▲' + fmtI(taxSavingCurrent);
   } else {
-    diffEl.textContent = '世帯手取りはほぼ同額です。';
+    benefitBox.style.display = 'none';
   }
 
+  const breakdownLines = [
+    `年収：${fmtI(income)}`,
+    `　- 社会保険料：${fmtI(p.socialIns)}（${p.needSocial ? '加入あり' : '扶養内・加入なし'}）`,
+    `　- 所得税：${fmtI(p.incomeTax)}`,
+    `　- 住民税：${fmtI(p.residentTax)}`,
+    `　＝ 手取り：<strong>${fmtI(current.partTake)}</strong>`,
+  ];
+  if (isSpouse && taxSavingCurrent > 0) {
+    breakdownLines.push(`　＋ 配偶者控除による夫の節税（推計）：<strong>▲${fmtI(taxSavingCurrent)}</strong>`);
+    breakdownLines.push(`　→ 実質的な稼ぎ（手取り＋節税）：<strong>${fmtI(current.partTake + taxSavingCurrent)}</strong>`);
+  }
+  document.getElementById('th-breakdown').innerHTML = breakdownLines.join('<br>');
+
+  // ── 年収別比較テーブル ──
+  function buildIncomeList(base) {
+    const keyPoints = [0, 50, 80, 100, 105, 110, 120, 123, 125, 130, 140, 150, 160, 170, 180, 190, 200, 210, 250];
+    if (isBig && hours >= 20) keyPoints.push(106);
+    const nearby = [];
+    for (let v = Math.max(0, base - 30); v <= base + 40; v += 5) nearby.push(v);
+    const all = [...new Set([...keyPoints, ...nearby, base])].sort((a, b) => a - b);
+    return all.filter(v => v >= Math.max(0, base - 30) && v <= base + 40);
+  }
+
+  const tableIncomes = buildIncomeList(income);
+  const tableEl = document.getElementById('income-table');
+  let tableHTML = `<table style="width:100%;border-collapse:collapse;font-size:12px;font-family:'DM Mono',monospace;">
+    <thead><tr style="background:var(--bg2);border-bottom:2px solid var(--border);">
+      <th style="padding:10px 16px;text-align:left;font-size:11px;letter-spacing:.1em;color:var(--muted);">年収</th>
+      <th style="padding:10px 8px;text-align:right;color:var(--muted);">手取り</th>
+      <th style="padding:10px 8px;text-align:right;color:var(--muted);">社保</th>
+      <th style="padding:10px 8px;text-align:right;color:var(--muted);">所得税</th>
+      <th style="padding:10px 8px;text-align:right;color:var(--muted);">住民税</th>
+      ${isSpouse ? '<th style="padding:10px 8px;text-align:right;color:var(--muted);">配偶者控除</th>' : ''}
+      <th style="padding:10px 16px;text-align:left;color:var(--muted);">メモ</th>
+    </tr></thead><tbody>`;
+
+  tableIncomes.forEach(v => {
+    const r = calcPartTake(v, isBig, hours, isStudent, over2months);
+    const ded = isSpouse ? calcSpouseDeduction(v, spouseIncome, isOld) : null;
+    const isCurrent = v === income;
+    const rowStyle = isCurrent
+      ? 'background:var(--bg2);font-weight:700;border-left:3px solid var(--accent);'
+      : 'border-left:3px solid transparent;';
+
+    const memos = [];
+    if (v === 110) memos.push('住民税の目安');
+    if (v === 123) memos.push('所得税・配偶者控除の目安');
+    if (v === 106 && isBig && hours >= 20) memos.push('社保加入目安（大企業）');
+    if (v === 130) memos.push('扶養から外れる目安');
+    if (v === 160) memos.push('配偶者特別控除 満額上限');
+    if (v === 201) memos.push('配偶者特別控除 終了');
+
+    const dedAmt = ded ? ded.deductionAmount : null;
+
+    tableHTML += `<tr style="${rowStyle}border-bottom:1px solid var(--border);">
+      <td style="padding:9px 16px;white-space:nowrap;">${isCurrent ? '▶ ' : ''}${v}万円</td>
+      <td style="padding:9px 8px;text-align:right;color:var(--accent);font-weight:600;">${fmtI(r.take)}</td>
+      <td style="padding:9px 8px;text-align:right;color:${r.needSocial ? 'var(--red)' : 'var(--muted)'};">${r.socialIns > 0 ? fmtI(r.socialIns) : '—'}</td>
+      <td style="padding:9px 8px;text-align:right;">${r.incomeTax > 0 ? fmtI(r.incomeTax) : '—'}</td>
+      <td style="padding:9px 8px;text-align:right;">${r.residentTax > 0 ? fmtI(r.residentTax) : '—'}</td>
+      ${isSpouse ? `<td style="padding:9px 8px;text-align:right;color:${dedAmt > 0 ? 'var(--green)' : 'var(--muted)'};">${dedAmt > 0 ? dedAmt + '万' : '—'}</td>` : ''}
+      <td style="padding:9px 16px;color:var(--muted);font-size:11px;">${memos.join(' / ')}</td>
+    </tr>`;
+  });
+  tableHTML += '</tbody></table>';
+  tableEl.innerHTML = tableHTML;
+
   const advices = [];
-  const p = current.partDetail;
   const shortTimeEligible = isBig && hours >= 20 && (income/12) >= 8.8 && !isStudent && over2months;
 
   if (!needSocialInsurance(income, isBig, hours, isStudent, over2months)) {
@@ -696,7 +801,7 @@ function calculate() {
   else advices.push('所得税は発生する可能性があります（控除・保険料の状況で変動）。');
 
   if (isSpouse) {
-    const { deductionAmount, deductionType } = calcSpouseDeduction(income, spouseIncome, isOld);
+    const { deductionAmount, deductionType } = calcSpouseDeduction(income, spouseIncome, isOld, getSpouseClass(spouseIncome));
     const taxSaving = calcSpouseTaxSaving(spouseIncome, deductionAmount);
     if (deductionAmount > 0) {
       advices.push(`扶養する側では<strong>${deductionType === 'control' ? '配偶者控除' : '配偶者特別控除'}（${deductionAmount}万円）</strong>が適用される可能性があり、所得税が推計約${fmt(taxSaving)}軽減されています。`);
@@ -723,8 +828,8 @@ function resetForm() {
 }
 
 // 初期化
-syncSpouseIncomeBand();
-syncSpouseIncomeMode();
+syncSpouseClassAuto();
+
 
 </script>
 </body>
