@@ -98,28 +98,19 @@
   margin-top: 10px;
 }
 
-
-/* INCOME SIMULATION: mobile-friendly (no horizontal scroll) */
-#income-table { max-width: 100%; overflow-x: hidden; }
-.income-sim-wrap { padding: 0 24px 18px; }
-@media(max-width:540px){ .income-sim-wrap { padding: 0 14px 14px; } }
-
-/* Desktop table (keeps current design) */
-.sim-table { width:100%; border-collapse:collapse; font-size:12px; font-family:'DM Mono',monospace; }
-.sim-table th, .sim-table td { border-bottom:1px solid var(--border); }
-.sim-table thead th { background:var(--bg2); border-bottom:2px solid var(--border); }
-
-/* Mobile: convert rows into stacked cards */
-@media(max-width:540px){
-  .sim-table { font-size:11px; }
-  .sim-table thead { display:none; }
-  .sim-table, .sim-table tbody, .sim-table tr, .sim-table td { display:block; width:100%; }
-  .sim-table tr { background: var(--card); border:1px solid var(--border); border-radius: var(--radius-sm); margin: 10px 0; overflow:hidden; }
-  .sim-table tr.current { border-left: 3px solid var(--accent); background: var(--bg2); }
-  .sim-table td { display:flex; justify-content:space-between; gap:12px; padding:10px 12px; border-bottom:1px solid var(--border); }
-  .sim-table td:last-child { border-bottom:none; }
-  .sim-table td::before { content: attr(data-label); color: var(--muted); font-size: 11px; }
-  .sim-table td.memo { color: var(--muted); font-size: 11px; }
+/* ===== Income Simulation Mobile Optimization ===== */
+@media(max-width: 430px){
+  #income-table table{
+    font-size:11px !important;
+  }
+  #income-table th,
+  #income-table td{
+    padding:6px 6px !important;
+    white-space:nowrap;
+  }
+  #income-table th{
+    font-size:10px !important;
+  }
 }
 
 </style>
@@ -334,7 +325,7 @@
     <div class="deduction-bar-card">
       <div class="deduction-bar-head">INCOME SIMULATION — 年収別の手取り比較</div>
       <div style="padding:14px 24px 6px;font-size:12px;color:var(--muted);">現在の年収±の範囲でシミュレーション。<strong style="color:var(--text)">太字</strong>が現在の年収。</div>
-      <div id="income-table" class="income-sim-wrap"></div>
+      <div id="income-table" style="overflow-x:auto;-webkit-overflow-scrolling:touch;"></div>
     </div>
 <span class="reset-link" onclick="resetForm()">← 入力をやり直す</span>
 
@@ -765,21 +756,25 @@ const companySel   = document.getElementById('company-size').value;
 
   const tableIncomes = buildIncomeList(income);
   const tableEl = document.getElementById('income-table');
-  let tableHTML = `<table class="sim-table">
-    <thead><tr>
-      <th style="padding:10px 16px;text-align:left;font-size:11px;letter-spacing:.1em;color:var(--muted);">年収</th>
-      <th style="padding:10px 8px;text-align:right;color:var(--muted);">手取り</th>
-      <th style="padding:10px 8px;text-align:right;color:var(--muted);">社保</th>
-      <th style="padding:10px 8px;text-align:right;color:var(--muted);">所得税</th>
-      <th style="padding:10px 8px;text-align:right;color:var(--muted);">住民税</th>
-      ${isSpouse ? '<th style="padding:10px 8px;text-align:right;color:var(--muted);">配偶者控除</th>' : ''}
-      <th style="padding:10px 16px;text-align:left;color:var(--muted);">メモ</th>
+  let tableHTML = `<table style="width:100%;border-collapse:collapse;font-size:12px;font-family:'DM Mono',monospace;">
+    <thead><tr style="background:var(--bg2);border-bottom:2px solid var(--border);">
+      <th style="padding:8px 12px;text-align:left;font-size:11px;letter-spacing:.1em;color:var(--muted);">年収</th>
+      <th style="padding:8px 6px;text-align:right;color:var(--muted);">手取り</th>
+      <th style="padding:8px 6px;text-align:right;color:var(--muted);">社保</th>
+      <th style="padding:8px 6px;text-align:right;color:var(--muted);">所得税</th>
+      <th style="padding:8px 6px;text-align:right;color:var(--muted);">住民税</th>
+      ${isSpouse ? '<th style="padding:8px 6px;text-align:right;color:var(--muted);">配偶者控除</th>' : ''}
+      <th style="padding:8px 12px;text-align:left;color:var(--muted);">メモ</th>
     </tr></thead><tbody>`;
 
   tableIncomes.forEach(v => {
     const r = calcPartTake(v, isBig, hours, isStudent, over2months);
     const ded = isSpouse ? calcSpouseDeduction(v, spouseIncome, isOld) : null;
     const isCurrent = v === income;
+    const rowStyle = isCurrent
+      ? 'background:var(--bg2);font-weight:700;border-left:3px solid var(--accent);'
+      : 'border-left:3px solid transparent;';
+
     const memos = [];
     if (v === 110) memos.push('住民税の目安');
     if (v === 123) memos.push('所得税・配偶者控除の目安');
@@ -790,14 +785,14 @@ const companySel   = document.getElementById('company-size').value;
 
     const dedAmt = ded ? ded.deductionAmount : null;
 
-    tableHTML += `<tr class="${isCurrent ? 'current' : ''}">
-      <td data-label="年収" style="padding:9px 16px;white-space:nowrap;">${isCurrent ? '▶ ' : ''}${v}万円</td>
-      <td data-label="手取り" style="padding:9px 8px;text-align:right;color:var(--accent);font-weight:600;">${fmtI(r.take)}</td>
-      <td data-label="社保" style="padding:9px 8px;text-align:right;color:${r.needSocial ? 'var(--red)' : 'var(--muted)'};">${r.socialIns > 0 ? fmtI(r.socialIns) : '—'}</td>
-      <td data-label="所得税" style="padding:9px 8px;text-align:right;">${r.incomeTax > 0 ? fmtI(r.incomeTax) : '—'}</td>
-      <td data-label="住民税" style="padding:9px 8px;text-align:right;">${r.residentTax > 0 ? fmtI(r.residentTax) : '—'}</td>
-      ${isSpouse ? `<td data-label="配偶者控除" style="padding:9px 8px;text-align:right;color:${dedAmt > 0 ? 'var(--green)' : 'var(--muted)'};">${dedAmt > 0 ? dedAmt + '万' : '—'}</td>` : ''}
-      <td class="memo" data-label="メモ" style="padding:9px 16px;color:var(--muted);font-size:11px;">${memos.join(' / ')}</td>
+    tableHTML += `<tr style="${rowStyle}border-bottom:1px solid var(--border);">
+      <td style="padding:7px 12px;white-space:nowrap;">${isCurrent ? '▶ ' : ''}${v}万円</td>
+      <td style="padding:7px 6px;text-align:right;color:var(--accent);font-weight:600;">${fmtI(r.take)}</td>
+      <td style="padding:7px 6px;text-align:right;color:${r.needSocial ? 'var(--red)' : 'var(--muted)'};">${r.socialIns > 0 ? fmtI(r.socialIns) : '—'}</td>
+      <td style="padding:7px 6px;text-align:right;">${r.incomeTax > 0 ? fmtI(r.incomeTax) : '—'}</td>
+      <td style="padding:7px 6px;text-align:right;">${r.residentTax > 0 ? fmtI(r.residentTax) : '—'}</td>
+      ${isSpouse ? `<td style="padding:7px 6px;text-align:right;color:${dedAmt > 0 ? 'var(--green)' : 'var(--muted)'};">${dedAmt > 0 ? dedAmt + '万' : '—'}</td>` : ''}
+      <td style="padding:7px 12px;color:var(--muted);font-size:11px;">${memos.join(' / ')}</td>
     </tr>`;
   });
   tableHTML += '</tbody></table>';
