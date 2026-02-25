@@ -79,7 +79,19 @@ input[type=range]::-moz-range-thumb {
   box-shadow: 0 1px 4px rgba(0,0,0,.25);
 }
 /* ticksはsliderのトラック端と揃える */
-.slider-wrap { position: relative; margin-bottom: 4px; }
+.slider-wrap {
+  position: relative;
+  margin-bottom: 4px;
+  /* iOSでthumbが端まで行けない問題を解消：
+     rangeを左右11px（thumb半径分）はみ出させてclip */
+  padding: 0 11px;
+  box-sizing: border-box;
+}
+.slider-wrap input[type=range] {
+  /* padding分だけ広げてはみ出させる */
+  width: calc(100% + 22px);
+  margin-left: -11px;
+}
 .slider-ticks { position: relative; height: 16px; margin-top: 4px; }
 .slider-ticks span {
   position: absolute;
@@ -406,7 +418,7 @@ input[type=range]::-moz-range-thumb {
     <div class="footer-note">
       ※本ツールの計算結果は概算です。実際の税額・手取り額は自治体・勤務先・各種控除・扶養家族数・月額賃金の実態などにより異なります。重要な判断の前には税理士・社会保険労務士等の専門家にご相談ください。<br>
       ※本ページは「2025年（令和7年分）税制改正」を前提にしています。<strong>社会保険の今後の改正：①月額賃金8.8万円要件（106万円の壁）は2026年中〜2028年6月に撤廃予定、②企業規模要件（51人以上）は2027年10月〜2035年10月に段階的撤廃（年金制度改正法・2025年6月成立）。</strong> 施行日は政令で確定次第変わります。<br>
-      ※所得税：給与所得控除（最低65万円）・基礎控除（合計所得により段階）を反映。住民税：基礎控除43万円・所得割10%・均等割＋森林環境税（合計5,500円相当）を「課税ベースがある場合」に計上（概算）。社会保険料率：14.15%を便宜上使用（実際は健保組合・都道府県・年度で変動）test。
+      ※所得税：給与所得控除（最低65万円）・基礎控除（合計所得により段階）を反映。住民税：基礎控除43万円・所得割10%・均等割＋森林環境税（合計5,500円相当）を「課税ベースがある場合」に計上（概算）。社会保険料率：14.15%を便宜上使用（実際は健保組合・都道府県・年度で変動）。thumb
     </div>
   </div>
 </div>
